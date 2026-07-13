@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { profileSchema } from "@/lib/validations";
+import { uploadProfilePhoto } from "@/lib/photos";
 
-async function canAccessProfile(profileId: string, pastorId: string) {
+async function canAccessProfile(
+  profileId: string,
+  pastorId: string,
+  churchId: string,
+) {
   const profile = await db.singleProfile.findUnique({
     where: { id: profileId },
     include: {
@@ -22,7 +25,7 @@ async function canAccessProfile(profileId: string, pastorId: string) {
 
   if (!profile) return null;
 
-  const isOwner = profile.createdById === pastorId;
+  const isOwner = profile.churchId === churchId;
   const isShared = profile.shares.length > 0;
 
   if (!isOwner && !isShared) return null;
@@ -40,7 +43,7 @@ export async function GET(
   }
 
   const { id } = await params;
-  const access = await canAccessProfile(id, session.id);
+  const access = await canAccessProfile(id, session.id, session.churchId);
 
   if (!access) {
     return NextResponse.json({ error: "Profile not found" }, { status: 404 });
@@ -62,7 +65,7 @@ export async function PUT(
   }
 
   const { id } = await params;
-  const access = await canAccessProfile(id, session.id);
+  const access = await canAccessProfile(id, session.id, session.churchId);
 
   if (!access) {
     return NextResponse.json({ error: "Profile not found" }, { status: 404 });
@@ -127,7 +130,7 @@ export async function DELETE(
   }
 
   const { id } = await params;
-  const access = await canAccessProfile(id, session.id);
+  const access = await canAccessProfile(id, session.id, session.churchId);
 
   if (!access) {
     return NextResponse.json({ error: "Profile not found" }, { status: 404 });
@@ -151,7 +154,7 @@ export async function POST(
   }
 
   const { id } = await params;
-  const access = await canAccessProfile(id, session.id);
+  const access = await canAccessProfile(id, session.id, session.churchId);
 
   if (!access) {
     return NextResponse.json({ error: "Profile not found" }, { status: 404 });
@@ -169,34 +172,16 @@ export async function POST(
       return NextResponse.json({ error: "No photo provided" }, { status: 400 });
     }
 
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-    if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json(
-        { error: "Invalid file type. Use JPEG, PNG, WebP, or GIF." },
-        { status: 400 },
-      );
-    }
-
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const filename = `${id}-${Date.now()}.${ext}`;
-    const uploadDir = path.join(process.cwd(), "public/uploads/profiles");
-
-    await mkdir(uploadDir, { recursive: true });
-
-    const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(path.join(uploadDir, filename), buffer);
-
-    const photoUrl = `/uploads/profiles/${filename}`;
+    const photoUrl = await uploadProfilePhoto(id, file);
     const profile = await db.singleProfile.update({
       where: { id },
       data: { photoUrl },
     });
 
     return NextResponse.json({ profile, photoUrl });
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to upload photo" },
-      { status: 500 },
-    );
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to upload photo";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -14,7 +14,8 @@ Pastor-only singles coordination across First Slav Church branches. Shepherd Con
 
 - [Next.js 16](https://nextjs.org/) (App Router)
 - [React 19](https://react.dev/)
-- [Prisma 7](https://www.prisma.io/) with SQLite
+- [Prisma 7](https://www.prisma.io/) with PostgreSQL (Neon)
+- [Vercel Blob](https://vercel.com/docs/storage/vercel-blob) for profile photos in production
 - [Tailwind CSS 4](https://tailwindcss.com/)
 - [Zod](https://zod.dev/) for validation
 - [jose](https://github.com/panva/jose) for JWT sessions
@@ -35,7 +36,9 @@ npm install
 
 ### Database setup
 
-Run migrations and seed demo data:
+1. Create a free PostgreSQL database at [Neon](https://neon.tech) (or use Vercel Postgres).
+2. Copy `.env.example` to `.env` and set `DATABASE_URL` to your Postgres connection string.
+3. Run migrations and seed demo data:
 
 ```bash
 npm run db:migrate
@@ -53,12 +56,14 @@ This creates:
 
 ### Environment variables
 
-Copy or edit `.env`:
+Copy `.env.example` to `.env`:
 
 ```env
-DATABASE_URL="file:./dev.db"
+DATABASE_URL="postgresql://USER:PASSWORD@HOST/DB?sslmode=require"
 AUTH_SECRET="your-secret-key-at-least-32-characters"
 ```
+
+Optional for local photo uploads without Vercel Blob — photos save to `public/uploads/profiles/`. On Vercel, connect **Blob** storage so `BLOB_READ_WRITE_TOKEN` is set automatically.
 
 `AUTH_SECRET` must be set in production. Generate one with:
 
@@ -134,9 +139,75 @@ src/
 - Profiles are visible to their creator and pastors they have been shared with.
 - Only the profile owner can edit, delete, upload photos, or share.
 
+## Deploy to Vercel
+
+This app is ready to deploy on [Vercel](https://vercel.com). You can open it on your phone from anywhere once deployed.
+
+### Step 1: Push the code to GitHub
+
+Make sure the `cursor/pastor-singles-app-0e26` branch is merged or use that branch when importing to Vercel.
+
+### Step 2: Import the project on Vercel
+
+1. Go to [vercel.com/new](https://vercel.com/new)
+2. Import `augustusarthur/scripture-projection-app`
+3. Select the branch with Shepherd Connect
+
+### Step 3: Add a Postgres database
+
+In the Vercel project:
+
+1. Open **Storage** → **Create Database** → **Neon** (or connect an existing Neon database)
+2. Vercel will add `DATABASE_URL` automatically
+
+Or create a database at [neon.tech](https://neon.tech), copy the connection string, and add it as `DATABASE_URL` in **Settings → Environment Variables**.
+
+### Step 4: Add Blob storage for photos
+
+1. In Vercel, open **Storage** → **Create Database** → **Blob**
+2. This adds `BLOB_READ_WRITE_TOKEN` automatically
+
+Without Blob, photo uploads will not persist on Vercel.
+
+### Step 5: Set auth secret
+
+In **Settings → Environment Variables**, add:
+
+| Name | Value |
+|------|-------|
+| `AUTH_SECRET` | A long random string (`openssl rand -base64 32`) |
+
+### Step 6: Deploy
+
+Click **Deploy**. Vercel runs database migrations automatically during build.
+
+### Step 7: Seed demo data (one time)
+
+After the first deploy, run the seed against your production database from your computer:
+
+```bash
+# Pull production env vars (requires Vercel CLI: npm i -g vercel)
+vercel env pull .env.production
+export $(grep -v '^#' .env.production | xargs)
+npm run db:seed
+```
+
+Or paste your production `DATABASE_URL` into a local `.env` and run `npm run db:seed`.
+
+### Step 8: Test on your phone
+
+Open your Vercel URL (e.g. `https://shepherd-connect.vercel.app`) in your phone browser and sign in with:
+
+- `pastor1@example.com` / `pastor123`
+
+---
+
 ## Photo uploads
 
-Profile photos are stored in `public/uploads/profiles/`. Accepted formats: JPEG, PNG, WebP, GIF.
+- **Local dev:** Photos save to `public/uploads/profiles/`
+- **Vercel:** Photos upload to Vercel Blob (requires `BLOB_READ_WRITE_TOKEN`)
+
+Accepted formats: JPEG, PNG, WebP, GIF.
 
 ## Scripts
 
