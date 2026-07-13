@@ -2,6 +2,10 @@
 
 Pastor-only singles coordination across First Slav Church branches. Shepherd Connect lets pastors create and manage single member profiles within their congregation, then securely share profiles with trusted pastors at other branches for intentional, faith-centered introductions.
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Faugustusarthur%2Fscripture-projection-app&project-name=shepherd-connect&env=AUTH_SECRET&envDescription=Random%20session%20secret%20%28run%3A%20openssl%20rand%20-base64%2032%29)
+
+**Live deploy guide:** see [DEPLOY.md](./DEPLOY.md)
+
 ## Features
 
 - **Pastor authentication** — Register and sign in with email/password; sessions are stored in HTTP-only JWT cookies.
