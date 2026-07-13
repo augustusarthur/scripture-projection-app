@@ -53,6 +53,12 @@ export default function HomePage() {
             >
               Sign in
             </Link>
+            <Link
+              href="/scripture"
+              className="rounded-lg border border-amber-300 bg-amber-50 px-6 py-3 text-sm font-semibold text-amber-900 hover:bg-amber-100"
+            >
+              Scripture projector
+            </Link>
           </div>
         </section>
 
