@@ -4,6 +4,8 @@ import { getSession } from "@/lib/auth";
 import { profileSchema } from "@/lib/validations";
 import { uploadProfilePhoto } from "@/lib/photos";
 
+export const runtime = "nodejs";
+
 async function canAccessProfile(
   profileId: string,
   pastorId: string,

@@ -1,7 +1,7 @@
 import Link from "next/link";
-import Image from "next/image";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
+import { ProfilePhoto } from "@/components/ProfilePhoto";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { calculateAge, formatDate, fullName, statusLabel } from "@/lib/utils";
@@ -56,7 +56,7 @@ export default async function SharedPage() {
               >
                 <div className="flex items-start gap-4">
                   {profile.photoUrl ? (
-                    <Image
+                    <ProfilePhoto
                       src={profile.photoUrl}
                       alt=""
                       width={64}

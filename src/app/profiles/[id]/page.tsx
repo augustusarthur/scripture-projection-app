@@ -1,7 +1,7 @@
 import Link from "next/link";
-import Image from "next/image";
 import { notFound, redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
+import { ProfilePhoto } from "@/components/ProfilePhoto";
 import { ShareProfileForm } from "@/components/ShareProfileForm";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -61,7 +61,7 @@ export default async function ProfileDetailPage({ params }: Props) {
       <div className="mb-6 flex items-start justify-between">
         <div className="flex items-start gap-5">
           {profile.photoUrl ? (
-            <Image
+            <ProfilePhoto
               src={profile.photoUrl}
               alt=""
               width={96}

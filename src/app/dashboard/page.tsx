@@ -1,7 +1,7 @@
 import Link from "next/link";
-import Image from "next/image";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/AppShell";
+import { ProfilePhoto } from "@/components/ProfilePhoto";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { calculateAge, fullName, statusLabel } from "@/lib/utils";
@@ -97,7 +97,7 @@ export default async function DashboardPage() {
                 className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-stone-50"
               >
                 {profile.photoUrl ? (
-                  <Image
+                  <ProfilePhoto
                     src={profile.photoUrl}
                     alt=""
                     width={48}

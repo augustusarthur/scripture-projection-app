@@ -89,8 +89,15 @@ export function ProfileForm({
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (file.size > 4 * 1024 * 1024) {
+      setFormError("Photo must be under 4 MB.");
+      return;
+    }
+
     setPhotoFile(file);
     setPhotoPreview(URL.createObjectURL(file));
+    setFormError("");
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -129,10 +136,19 @@ export function ProfileForm({
     if (photoFile && savedId) {
       const photoData = new FormData();
       photoData.append("photo", photoFile);
-      await fetch(`/api/profiles/${savedId}`, {
+      const photoRes = await fetch(`/api/profiles/${savedId}`, {
         method: "POST",
         body: photoData,
       });
+
+      if (!photoRes.ok) {
+        const photoErr = await photoRes.json();
+        setFormError(
+          photoErr.error || "Profile saved, but the photo could not be uploaded.",
+        );
+        setLoading(false);
+        return;
+      }
     }
 
     router.push(redirectTo || `/profiles/${savedId}`);
@@ -165,7 +181,8 @@ export function ProfileForm({
           )}
           <input
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,.heic,.heif"
+            capture="environment"
             onChange={handlePhotoChange}
             className="mt-2 block w-full text-xs text-stone-600"
           />
