@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Church {
+  id        String          @id @default(cuid())
+  name      String
+  city      String
+  state     String
+  pastors   Pastor[]
+  profiles  SingleProfile[]
+  createdAt DateTime        @default(now())
+}
+
+model Pastor {
+  id             String          @id @default(cuid())
+  email          String          @unique
+  passwordHash   String
+  firstName      String
+  lastName       String
+  churchId       String
+  church         Church          @relation(fields: [churchId], references: [id])
+  profiles       SingleProfile[]
+  sharesSent     ProfileShare[]  @relation("SharedBy")
+  sharesReceived ProfileShare[]  @relation("SharedWith")
+  createdAt      DateTime        @default(now())
+}
+
+model SingleProfile {
+  id              String         @id @default(cuid())
+  churchId        String
+  church          Church         @relation(fields: [churchId], references: [id])
+  createdById     String
+  createdBy       Pastor         @relation(fields: [createdById], references: [id])
+  firstName       String
+  lastName        String
+  dateOfBirth     DateTime?
+  gender          String
+  height          String?
+  city            String?
+  state           String?
+  phone           String?
+  email           String?
+  occupation      String?
+  education       String?
+  bio             String?
+  faithBackground String?
+  interests       String?
+  lookingFor      String?
+  languages       String?
+  photoUrl        String?
+  status          String         @default("active")
+  pastorNotes     String?
+  shares          ProfileShare[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model ProfileShare {
+  id           String        @id @default(cuid())
+  profileId    String
+  profile      SingleProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  sharedById   String
+  sharedBy     Pastor        @relation("SharedBy", fields: [sharedById], references: [id])
+  sharedWithId String
+  sharedWith   Pastor        @relation("SharedWith", fields: [sharedWithId], references: [id])
+  message      String?
+  status       String        @default("pending")
+  createdAt    DateTime      @default(now())
+
+  @@unique([profileId, sharedWithId])
+}
