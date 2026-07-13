@@ -10,7 +10,7 @@ import { Pencil } from "lucide-react";
 
 type Props = { params: Promise<{ id: string }> };
 
-async function getProfileAccess(id: string, pastorId: string) {
+async function getProfileAccess(id: string, pastorId: string, churchId: string) {
   const profile = await db.singleProfile.findUnique({
     where: { id },
     include: {
@@ -22,7 +22,7 @@ async function getProfileAccess(id: string, pastorId: string) {
 
   if (!profile) return null;
 
-  const isOwner = profile.createdById === pastorId;
+  const isOwner = profile.churchId === churchId;
   const isShared = profile.shares.length > 0;
 
   if (!isOwner && !isShared) return null;
@@ -35,7 +35,7 @@ export default async function ProfileDetailPage({ params }: Props) {
   if (!session) redirect("/login");
 
   const { id } = await params;
-  const access = await getProfileAccess(id, session.id);
+  const access = await getProfileAccess(id, session.id, session.churchId);
   if (!access) notFound();
 
   const { profile, isOwner } = access;

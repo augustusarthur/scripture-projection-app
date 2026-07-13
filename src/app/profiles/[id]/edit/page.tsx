@@ -13,7 +13,7 @@ export default async function EditProfilePage({ params }: Props) {
   const { id } = await params;
   const profile = await db.singleProfile.findUnique({ where: { id } });
 
-  if (!profile || profile.createdById !== session.id) {
+  if (!profile || profile.churchId !== session.churchId) {
     notFound();
   }
 
