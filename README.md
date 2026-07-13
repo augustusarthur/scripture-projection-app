@@ -1,6 +1,6 @@
 # Shepherd Connect
 
-Pastor-only singles coordination across First Slav Church branches. Shepherd Connect lets pastors create and manage single member profiles within their congregation, then securely share profiles with trusted pastors at other branches for intentional, faith-centered introductions.
+Pastor-only singles coordination across First Love Church branches. Shepherd Connect lets pastors create and manage single member profiles within their congregation, then securely share profiles with trusted pastors at other branches for intentional, faith-centered introductions.
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Faugustusarthur%2Fscripture-projection-app&project-name=shepherd-connect&env=AUTH_SECRET&envDescription=Random%20session%20secret%20%28run%3A%20openssl%20rand%20-base64%2032%29)
 
@@ -9,7 +9,7 @@ Pastor-only singles coordination across First Slav Church branches. Shepherd Con
 ## Features
 
 - **Pastor authentication** — Register and sign in with email/password; sessions are stored in HTTP-only JWT cookies.
-- **Church branches** — Pastors select their branch from 12 First Slav Church locations during registration.
+- **Church branches** — Pastors select their branch from 12 First Love Church locations during registration.
 - **Profile management** — Create, view, edit, and delete single member profiles with photos, faith background, interests, and private pastor notes.
 - **Cross-branch sharing** — Share profiles with pastors at other branches; recipients see shared profiles under "Shared With Me."
 - **Pastor directory** — Search pastors across the network by name, email, or church location.
@@ -51,7 +51,7 @@ npm run db:seed
 
 This creates:
 
-- 12 First Slav Church branches (Brooklyn, Manhattan, Philadelphia, Chicago, Cleveland, Detroit, Sacramento, Portland, Seattle, Denver, Atlanta, Miami)
+- 12 First Love Church branches (Brooklyn, Manhattan, Philadelphia, Chicago, Cleveland, Detroit, Sacramento, Portland, Seattle, Denver, Atlanta, Miami)
 - 3 demo pastors (password: `pastor123`):
   - `pastor1@example.com` — Brooklyn
   - `pastor2@example.com` — Chicago
@@ -226,4 +226,4 @@ Accepted formats: JPEG, PNG, WebP, GIF.
 
 ## License
 
-Private — First Slav Church network use.
+Private — First Love Church network use.

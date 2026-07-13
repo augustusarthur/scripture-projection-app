@@ -42,7 +42,7 @@ export default async function PastorsPage({ searchParams }: Props) {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-stone-900">Find Pastors</h1>
         <p className="mt-1 text-stone-600">
-          Search pastors across First Slav Church branches to coordinate
+          Search pastors across First Love Church branches to coordinate
           introductions.
         </p>
       </div>

@@ -38,7 +38,7 @@ export default function HomePage() {
           <p className="mx-auto mt-6 max-w-2xl text-lg text-stone-600">
             Shepherd Connect helps pastors manage single member profiles within
             their congregation and share them securely with trusted pastors at
-            other First Slav Church branches.
+            other First Love Church branches.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link
@@ -93,7 +93,7 @@ export default function HomePage() {
       </main>
 
       <footer className="border-t border-stone-200 py-8 text-center text-sm text-stone-500">
-        Shepherd Connect — First Slav Church network
+        Shepherd Connect — First Love Church network
       </footer>
     </div>
   );

@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Shepherd Connect",
   description:
-    "Pastor-only singles coordination across First Slav Church branches",
+    "Pastor-only singles coordination across First Love Church branches",
 };
 
 export default function RootLayout({

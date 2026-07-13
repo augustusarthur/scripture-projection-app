@@ -14,24 +14,34 @@ const adapter = new PrismaPg(pool);
 const db = new PrismaClient({ adapter });
 
 const churches = [
-  { name: "First Slav Church — Brooklyn", city: "Brooklyn", state: "NY" },
-  { name: "First Slav Church — Manhattan", city: "New York", state: "NY" },
-  { name: "First Slav Church — Philadelphia", city: "Philadelphia", state: "PA" },
-  { name: "First Slav Church — Chicago", city: "Chicago", state: "IL" },
-  { name: "First Slav Church — Cleveland", city: "Cleveland", state: "OH" },
-  { name: "First Slav Church — Detroit", city: "Detroit", state: "MI" },
-  { name: "First Slav Church — Sacramento", city: "Sacramento", state: "CA" },
-  { name: "First Slav Church — Portland", city: "Portland", state: "OR" },
-  { name: "First Slav Church — Seattle", city: "Seattle", state: "WA" },
-  { name: "First Slav Church — Denver", city: "Denver", state: "CO" },
-  { name: "First Slav Church — Atlanta", city: "Atlanta", state: "GA" },
-  { name: "First Slav Church — Miami", city: "Miami", state: "FL" },
+  { name: "First Love Church — Brooklyn", city: "Brooklyn", state: "NY" },
+  { name: "First Love Church — Manhattan", city: "New York", state: "NY" },
+  { name: "First Love Church — Philadelphia", city: "Philadelphia", state: "PA" },
+  { name: "First Love Church — Chicago", city: "Chicago", state: "IL" },
+  { name: "First Love Church — Cleveland", city: "Cleveland", state: "OH" },
+  { name: "First Love Church — Detroit", city: "Detroit", state: "MI" },
+  { name: "First Love Church — Sacramento", city: "Sacramento", state: "CA" },
+  { name: "First Love Church — Portland", city: "Portland", state: "OR" },
+  { name: "First Love Church — Seattle", city: "Seattle", state: "WA" },
+  { name: "First Love Church — Denver", city: "Denver", state: "CO" },
+  { name: "First Love Church — Atlanta", city: "Atlanta", state: "GA" },
+  { name: "First Love Church — Miami", city: "Miami", state: "FL" },
 ];
 
 async function main() {
   console.log("Seeding Shepherd Connect database...");
 
   for (const church of churches) {
+    const legacyName = church.name.replace("First Love", "First Slav");
+    const legacy = await db.church.findFirst({ where: { name: legacyName } });
+    if (legacy) {
+      await db.church.update({
+        where: { id: legacy.id },
+        data: { name: church.name, city: church.city, state: church.state },
+      });
+      continue;
+    }
+
     const existing = await db.church.findFirst({
       where: { name: church.name },
     });
