@@ -1,14 +1,15 @@
-import { ScriptureController } from "@/components/scripture/ScriptureController";
+import { ScriptureListener } from "@/components/scripture/ScriptureListener";
+import "./scripture.css";
 
 export const metadata = {
-  title: "Scripture Projector",
-  description: "Speak or type a reference to display scripture on the projection screen.",
+  title: "Scripture Projection",
+  description: "Listen for scripture references and project them on screen.",
 };
 
 export default function ScripturePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-stone-100 to-stone-200 px-4 py-10">
-      <ScriptureController />
+    <div className="listenPage min-h-screen">
+      <ScriptureListener />
     </div>
   );
 }

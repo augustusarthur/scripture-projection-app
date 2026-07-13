@@ -4,6 +4,7 @@ import { fetchScripture } from "@/lib/scripture";
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const reference = searchParams.get("ref")?.trim();
+  const translation = searchParams.get("translation")?.trim() || "kjv";
 
   if (!reference) {
     return NextResponse.json(
@@ -13,7 +14,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const passage = await fetchScripture(reference);
+    const passage = await fetchScripture(reference, translation);
     return NextResponse.json(passage);
   } catch (error) {
     const message =
