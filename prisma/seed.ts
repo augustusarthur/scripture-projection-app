@@ -42,6 +42,23 @@ async function main() {
 
   const allChurches = await db.church.findMany({ orderBy: { name: "asc" } });
   const passwordHash = await bcrypt.hash("pastor123", 12);
+  const adminPasswordHash = await bcrypt.hash("Password", 12);
+
+  await db.pastor.upsert({
+    where: { email: "augustusarthur@shepherdconnect.app" },
+    update: {
+      passwordHash: adminPasswordHash,
+      firstName: "Augustus",
+      lastName: "Arthur",
+    },
+    create: {
+      email: "augustusarthur@shepherdconnect.app",
+      passwordHash: adminPasswordHash,
+      firstName: "Augustus",
+      lastName: "Arthur",
+      churchId: allChurches[0].id,
+    },
+  });
 
   const pastorData = [
     {

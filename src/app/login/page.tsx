@@ -13,7 +13,7 @@ import {
 export default function LoginPage() {
   const router = useRouter();
   const [from, setFrom] = useState("/dashboard");
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -31,7 +31,7 @@ export default function LoginPage() {
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email: username, password }),
     });
 
     const data = await res.json();
@@ -40,7 +40,7 @@ export default function LoginPage() {
       setError(
         typeof data.error === "string"
           ? data.error
-          : data.error?.email?.[0] || "Login failed",
+          : data.error?.email?.[0] || data.error?.password?.[0] || "Login failed",
       );
       setLoading(false);
       return;
@@ -73,14 +73,14 @@ export default function LoginPage() {
           </div>
         )}
 
-        <FormField label="Email">
+        <FormField label="Username">
           <input
-            type="email"
+            type="text"
             className={fieldClass}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             required
-            autoComplete="email"
+            autoComplete="username"
           />
         </FormField>
 

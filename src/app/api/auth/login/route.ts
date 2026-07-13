@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { verifyPassword, createSession } from "@/lib/auth";
-import { loginSchema } from "@/lib/validations";
+import { loginSchema, resolveLoginEmail } from "@/lib/validations";
 
 export async function POST(request: Request) {
   try {
@@ -16,9 +16,10 @@ export async function POST(request: Request) {
     }
 
     const { email, password } = parsed.data;
+    const loginEmail = resolveLoginEmail(email);
 
     const pastor = await db.pastor.findUnique({
-      where: { email },
+      where: { email: loginEmail },
       include: { church: true },
     });
 

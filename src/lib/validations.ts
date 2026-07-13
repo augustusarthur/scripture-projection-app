@@ -9,9 +9,15 @@ export const registerSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  email: z.string().email("Enter a valid email"),
+  email: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
 });
+
+export function resolveLoginEmail(identifier: string) {
+  const trimmed = identifier.trim();
+  if (trimmed.includes("@")) return trimmed.toLowerCase();
+  return `${trimmed.toLowerCase()}@shepherdconnect.app`;
+}
 
 export const profileSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
