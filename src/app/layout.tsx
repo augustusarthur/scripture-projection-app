@@ -13,9 +13,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Shepherd Connect",
+  title: {
+    default: "First Love Tools",
+    template: "%s · First Love Tools",
+  },
   description:
-    "Pastor-only singles coordination across First Love Church branches",
+    "Church attendance tracking, scripture projection, and pastor singles coordination for First Love Church",
 };
 
 export default function RootLayout({

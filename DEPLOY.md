@@ -1,6 +1,28 @@
+# Deploy guides
+
+## Attendance Ledger — public URL (GitHub Pages)
+
+The attendance tracker is a static site. A ready-to-serve copy is already on the **`gh-pages`** branch.
+
+### Enable the URL (about 30 seconds)
+
+1. Open [Settings → Pages](https://github.com/augustusarthur/scripture-projection-app/settings/pages)
+2. **Build and deployment → Source** → **Deploy from a branch**
+3. Branch: **`gh-pages`**, folder: **`/`** → **Save**
+
+Live site:
+
+**https://augustusarthur.github.io/scripture-projection-app/**
+
+Works on your phone. Attendance saves in the browser — no database or env vars.
+
+After merging the Attendance PR, you can instead set Source to **GitHub Actions** and use the **Deploy Attendance to GitHub Pages** workflow (deploys from `docs/`).
+
+---
+
 # Shepherd Connect — one-click Vercel deploy
 
-Use this if you want the fastest path to a live URL on your phone.
+Use this if you want the fastest path to a live URL on your phone for Shepherd Connect.
 
 ## Deploy in about 5 minutes
 
