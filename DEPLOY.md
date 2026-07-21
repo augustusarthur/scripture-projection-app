@@ -1,16 +1,22 @@
 # Deploy guides
 
-## Attendance Ledger (GitHub Pages — public URL)
+## Attendance Ledger — public URL (GitHub Pages)
 
-The attendance app is a static site in `docs/` and deploys to GitHub Pages:
+The attendance tracker is a static site. A ready-to-serve copy is already on the **`gh-pages`** branch.
+
+### Enable the URL (about 30 seconds)
+
+1. Open [Settings → Pages](https://github.com/augustusarthur/scripture-projection-app/settings/pages)
+2. **Build and deployment → Source** → **Deploy from a branch**
+3. Branch: **`gh-pages`**, folder: **`/`** → **Save**
+
+Live site:
 
 **https://augustusarthur.github.io/scripture-projection-app/**
 
-1. Merge to `main` (or run the **Deploy Attendance to GitHub Pages** workflow).
-2. In the repo: **Settings → Pages → Source: GitHub Actions**.
-3. Open the URL above on your phone.
+Works on your phone. Attendance saves in the browser — no database or env vars.
 
-No database or env vars required — attendance saves in the browser.
+After merging the Attendance PR, you can instead set Source to **GitHub Actions** and use the **Deploy Attendance to GitHub Pages** workflow (deploys from `docs/`).
 
 ---
 
