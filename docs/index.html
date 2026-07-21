@@ -6,17 +6,9 @@
 <title>Attendance Ledger</title>
 <style>
   :root {
-    --ink: #1f2a24;
-    --paper: #f6f3ea;
-    --card: #ffffff;
-    --forest: #2c4a3b;
-    --forest-deep: #1a3327;
-    --gold: #c8952f;
-    --gold-soft: #f0deb3;
-    --line: #d9d2bd;
-    --muted: #7c7568;
-    --present: #2c4a3b;
-    --absent: #b6503a;
+    --ink: #1f2a24; --paper: #f6f3ea; --card: #ffffff; --forest: #2c4a3b;
+    --forest-deep: #1a3327; --gold: #c8952f; --gold-soft: #f0deb3; --line: #d9d2bd;
+    --muted: #7c7568; --present: #2c4a3b; --absent: #b6503a;
   }
   * { box-sizing: border-box; }
   body {
@@ -27,238 +19,113 @@
       var(--paper);
     color: var(--ink);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-    padding: 0 0 60px 0;
-    min-height: 100vh;
+    padding: 0 0 60px; min-height: 100vh;
   }
   header {
     background: linear-gradient(160deg, var(--forest-deep) 0%, #243f32 100%);
-    color: var(--paper);
-    padding: 28px 24px 22px;
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    color: var(--paper); padding: 28px 24px 22px; position: sticky; top: 0; z-index: 10;
     box-shadow: 0 4px 14px rgba(0,0,0,0.15);
   }
   .header-inner {
-    max-width: 880px;
-    margin: 0 auto;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 14px;
+    max-width: 880px; margin: 0 auto; display: flex; flex-wrap: wrap;
+    align-items: center; justify-content: space-between; gap: 14px;
   }
-  h1 {
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 26px;
-    margin: 0;
-    letter-spacing: 0.3px;
-  }
+  h1 { font-family: Georgia, "Times New Roman", serif; font-size: 26px; margin: 0; letter-spacing: 0.3px; }
   h1 span { color: var(--gold-soft); font-style: italic; }
-  .date-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
+  .date-row { display: flex; align-items: center; gap: 10px; }
   .date-row label { font-size: 13px; color: var(--gold-soft); }
   .date-row input[type="date"] {
-    background: var(--forest);
-    border: 1px solid var(--gold);
-    color: var(--paper);
-    padding: 7px 10px;
-    border-radius: 6px;
-    font-size: 14px;
+    background: var(--forest); border: 1px solid var(--gold); color: var(--paper);
+    padding: 7px 10px; border-radius: 6px; font-size: 14px;
   }
-  .summary-bar {
-    max-width: 880px;
-    margin: 18px auto 0;
-    padding: 0 24px;
-    display: flex;
-    gap: 18px;
-    flex-wrap: wrap;
-    font-size: 13px;
-    color: var(--muted);
+  .back-link {
+    background: transparent; border: none; color: var(--gold-soft); font-size: 13px;
+    padding: 0; margin-bottom: 6px; cursor: pointer; display: block;
   }
+  .hero-copy, .summary-bar, .actions, .status-msg, main {
+    max-width: 880px; margin-left: auto; margin-right: auto; padding-left: 24px; padding-right: 24px;
+  }
+  .hero-copy { margin-top: 22px; }
+  .hero-copy h2 { font-family: Georgia, serif; font-size: 22px; margin: 0 0 8px; color: var(--forest-deep); }
+  .hero-copy p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.45; max-width: 36rem; }
+  .summary-bar { margin-top: 18px; display: flex; gap: 18px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
   .summary-bar b { color: var(--forest-deep); font-size: 16px; }
-  main {
-    max-width: 880px;
-    margin: 0 auto;
-    padding: 24px;
+  .actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+  .actions button, .photo-actions button, .add-row button {
+    background: var(--forest-deep); color: white; border: none; padding: 10px 16px;
+    border-radius: 6px; font-size: 13.5px; cursor: pointer;
   }
-  .group {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    margin-bottom: 18px;
-    overflow: hidden;
-    animation: fadeUp 0.35s ease both;
+  .actions button.secondary, .photo-actions button {
+    background: white; color: var(--forest-deep); border: 1px solid var(--line);
   }
-  .group:nth-child(2) { animation-delay: 0.04s; }
-  .group:nth-child(3) { animation-delay: 0.08s; }
-  .group:nth-child(4) { animation-delay: 0.12s; }
-  .group:nth-child(5) { animation-delay: 0.16s; }
-  .group:nth-child(6) { animation-delay: 0.2s; }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
+  .photo-actions button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .status-msg { margin-top: 10px; font-size: 12.5px; color: var(--muted); min-height: 16px; }
+  main { margin-top: 18px; padding-bottom: 24px; }
+  .leader-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+  .leader-card {
+    text-align: left; background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+    padding: 18px 16px; cursor: pointer; display: flex; flex-direction: column; gap: 6px;
   }
+  .leader-card.submitted { border-color: var(--forest); background: linear-gradient(180deg, #fff 0%, #f3f7f4 100%); }
+  .leader-name { font-family: Georgia, serif; font-size: 20px; color: var(--forest-deep); }
+  .leader-meta { font-size: 13px; color: var(--muted); }
+  .leader-status { margin-top: 8px; font-size: 12.5px; color: var(--gold); font-weight: 600; }
+  .leader-status.on { color: var(--forest); }
+  .group { background: var(--card); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 18px; overflow: hidden; }
   .group-head {
-    background: var(--gold-soft);
-    padding: 12px 18px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
+    background: var(--gold-soft); padding: 12px 18px; display: flex; justify-content: space-between;
+    align-items: center; width: 100%; border: none; font: inherit; text-align: left; cursor: pointer;
   }
-  .group-head h2 {
-    font-family: Georgia, serif;
-    font-size: 17px;
-    margin: 0;
-    color: var(--forest-deep);
-  }
-  .group-count {
-    font-size: 12.5px;
-    color: var(--forest);
-    background: rgba(255,255,255,0.6);
-    padding: 3px 9px;
-    border-radius: 20px;
-  }
+  .group-head.static { cursor: default; }
+  .group-head h2 { font-family: Georgia, serif; font-size: 17px; margin: 0; color: var(--forest-deep); }
+  .group-count { font-size: 12.5px; color: var(--forest); background: rgba(255,255,255,0.6); padding: 3px 9px; border-radius: 20px; }
   .group-body { padding: 6px 10px; }
   .person-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 10px 10px;
-    border-bottom: 1px solid #f0ede1;
-    font-size: 15px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 10px; border-bottom: 1px solid #f0ede1; font-size: 15px;
   }
   .person-row:last-of-type { border-bottom: none; }
   .person-name { flex: 1; min-width: 0; }
-  .person-actions { display: flex; align-items: center; gap: 8px; }
   .toggle-group { display: flex; gap: 6px; }
   .toggle-btn {
-    border: 1px solid var(--line);
-    background: var(--paper);
-    color: var(--muted);
-    padding: 6px 13px;
-    border-radius: 20px;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.15s ease;
+    border: 1px solid var(--line); background: var(--paper); color: var(--muted);
+    padding: 6px 13px; border-radius: 20px; font-size: 13px; cursor: pointer;
   }
-  .toggle-btn.present.active {
-    background: var(--present);
-    border-color: var(--present);
-    color: white;
+  .toggle-btn.present.active { background: var(--present); border-color: var(--present); color: white; }
+  .toggle-btn.absent.active { background: var(--absent); border-color: var(--absent); color: white; }
+  .add-row { display: flex; gap: 8px; padding: 10px; border-top: 1px solid #f0ede1; }
+  .add-row input, .notes-input {
+    flex: 1; width: 100%; padding: 8px 10px; border: 1px solid var(--line);
+    border-radius: 6px; font-size: 14px; font-family: inherit;
   }
-  .toggle-btn.absent.active {
-    background: var(--absent);
-    border-color: var(--absent);
-    color: white;
+  .notes-input { min-height: 84px; resize: vertical; }
+  .photo-body { padding: 14px; }
+  .photo-hint, .photo-empty, .notes-preview { margin: 0 0 12px; color: var(--muted); font-size: 13.5px; }
+  .photo-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+  .photo-tile {
+    margin: 0; position: relative; border-radius: 8px; overflow: hidden;
+    border: 1px solid var(--line); background: #eee; aspect-ratio: 1;
   }
-  .remove-btn {
-    border: none;
-    background: transparent;
-    color: var(--muted);
-    cursor: pointer;
-    font-size: 12px;
-    padding: 4px 6px;
+  .photo-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .photo-remove {
+    position: absolute; left: 6px; right: 6px; bottom: 6px; border: none;
+    background: rgba(26, 51, 39, 0.85); color: white; border-radius: 6px;
+    padding: 6px; font-size: 12px; cursor: pointer;
   }
-  .add-row {
-    display: flex;
-    gap: 8px;
-    padding: 10px;
-    border-top: 1px solid #f0ede1;
+  .pill {
+    display: inline-block; margin-left: 8px; font-size: 11px; font-weight: 600;
+    padding: 3px 8px; border-radius: 999px; background: var(--forest); color: white; vertical-align: middle;
   }
-  .add-row input {
-    flex: 1;
-    padding: 8px 10px;
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    font-size: 14px;
-  }
-  .add-row button {
-    background: var(--forest);
-    color: white;
-    border: none;
-    padding: 8px 14px;
-    border-radius: 6px;
-    font-size: 13px;
-    cursor: pointer;
-  }
-  .actions {
-    display: flex;
-    gap: 10px;
-    max-width: 880px;
-    margin: 6px auto 0;
-    padding: 0 24px;
-    flex-wrap: wrap;
-  }
-  .actions button {
-    background: var(--forest-deep);
-    color: white;
-    border: none;
-    padding: 10px 16px;
-    border-radius: 6px;
-    font-size: 13.5px;
-    cursor: pointer;
-  }
-  .actions button.secondary {
-    background: white;
-    color: var(--forest-deep);
-    border: 1px solid var(--line);
-  }
-  .status-msg {
-    max-width: 880px;
-    margin: 10px auto 0;
-    padding: 0 24px;
-    font-size: 12.5px;
-    color: var(--muted);
-    min-height: 16px;
-  }
-  .collapsed .group-body { display: none; }
-  .chevron { transition: transform 0.15s ease; color: var(--forest); font-size: 12px; display: inline-block; }
-  .collapsed .chevron { transform: rotate(-90deg); }
   @media (max-width: 640px) {
     .person-row { flex-direction: column; align-items: stretch; }
-    .person-actions { justify-content: space-between; }
     .toggle-btn { flex: 1; text-align: center; }
   }
 </style>
 </head>
 <body>
-
-<header>
-  <div class="header-inner">
-    <h1>Attendance <span>Ledger</span></h1>
-    <div class="date-row">
-      <label for="attDate">Date</label>
-      <input type="date" id="attDate">
-    </div>
-  </div>
-</header>
-
-<div class="summary-bar">
-  <div>Present: <b id="countPresent">0</b></div>
-  <div>Absent: <b id="countAbsent">0</b></div>
-  <div>Not marked: <b id="countUnmarked">0</b></div>
-  <div>Total roster: <b id="countTotal">0</b></div>
-</div>
-
-<div class="actions">
-  <button id="saveBtn">Save attendance</button>
-  <button class="secondary" id="markAllPresent">Mark all present</button>
-  <button class="secondary" id="exportBtn">Export CSV</button>
-</div>
-<div class="status-msg" id="statusMsg">Attendance saves automatically on this device.</div>
-
-<main id="groupsContainer"></main>
-
+<div id="app"></div>
 <script>
-const STORAGE_KEY = "church-attendance-state-v1";
-const ROSTER_KEY = "church-attendance-roster-v1";
-
 const DEFAULT_ROSTER = {
   "Aliye's Group": ["Anthony","Heba","Jeremy","Jordan","Josiah","Odera","Patrick","Tessa","Kokou","Kriti","Adrianna","Judith"],
   "Augustus's Group": ["Dieumerci","Ashlee","Brian","Furri","Pastor Glodie","Pressley","Terrence","Israel","Gerald","Uyi","Aliye","Chancela","Chidi","Diana","Ephraim","Jeff","Korey","Mama Vivian","Nancy","Shalyne"],
@@ -267,186 +134,315 @@ const DEFAULT_ROSTER = {
   "Shalyne's Group": ["Eden M","Morris","Talent","Trishana","Vanessa","Dennis","Brian","Douglas","Maru"],
   "Needs a Group": ["Lucky","Atrel/Joseph","Dezhon","Johan"]
 };
-
+const ATT_KEY = "church-attendance-state-v1";
+const ROSTER_KEY = "church-attendance-roster-v1";
+const SUB_KEY = "church-attendance-submissions-v1";
+const MAX_IMAGES = 8;
 let roster = structuredClone(DEFAULT_ROSTER);
 let state = {};
+let submissions = {};
+let view = "home";
+let activeGroup = null;
 let currentDate = new Date().toISOString().slice(0,10);
-
-const container = document.getElementById('groupsContainer');
-const dateInput = document.getElementById('attDate');
-dateInput.value = currentDate;
-
-function personKey(group, name) { return group + '|' + name; }
-
-function flash(msg) {
-  const el = document.getElementById('statusMsg');
-  el.textContent = msg;
-  setTimeout(() => { el.textContent = 'Attendance saves automatically on this device.'; }, 2500);
+let notes = "";
+let statusMsg = "";
+let statusTimer = null;
+let uploading = false;
+const app = document.getElementById("app");
+function personKey(group, name) { return group + "|" + name; }
+function submissionKey(group, date) { return group + "|" + date; }
+function leaderSlug(group) {
+  return group.toLowerCase().replace(/['']/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
-
+function leaderLabel(group) {
+  return group === "Needs a Group" ? group : group.replace(/'s Group$/i, "");
+}
+function findGroupBySlug(slug) {
+  const n = (slug || "").toLowerCase();
+  return Object.keys(roster).find(g => leaderSlug(g) === n);
+}
+function read(key, fallback) {
+  try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
+  catch { return fallback; }
+}
 function persist() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  localStorage.setItem(ATT_KEY, JSON.stringify(state));
   localStorage.setItem(ROSTER_KEY, JSON.stringify(roster));
+  localStorage.setItem(SUB_KEY, JSON.stringify(submissions));
 }
-
-function render() {
-  container.innerHTML = '';
-  let total = 0;
-  for (const [group, people] of Object.entries(roster)) {
-    total += people.length;
-    const groupEl = document.createElement('div');
-    groupEl.className = 'group';
-    const head = document.createElement('div');
-    head.className = 'group-head';
-    head.innerHTML = `<h2>${group} <span class="chevron">▾</span></h2><span class="group-count">${people.length}</span>`;
-    head.onclick = () => groupEl.classList.toggle('collapsed');
-    groupEl.appendChild(head);
-
-    const body = document.createElement('div');
-    body.className = 'group-body';
-
-    people.forEach(name => {
-      const row = document.createElement('div');
-      row.className = 'person-row';
-      const key = personKey(group, name);
-      const current = (state[currentDate] || {})[key];
-      row.innerHTML = `
-        <span class="person-name">${name}</span>
-        <span class="person-actions">
-          <span class="toggle-group">
-            <button class="toggle-btn present ${current==='present'?'active':''}" data-key="${key}" data-val="present">Present</button>
-            <button class="toggle-btn absent ${current==='absent'?'active':''}" data-key="${key}" data-val="absent">Absent</button>
-          </span>
-          <button class="remove-btn" data-group="${group}" data-name="${name}">Remove</button>
-        </span>`;
-      body.appendChild(row);
-    });
-
-    const addRow = document.createElement('div');
-    addRow.className = 'add-row';
-    addRow.innerHTML = `<input type="text" placeholder="Add a name…" data-group="${group}"><button data-add="${group}">Add</button>`;
-    body.appendChild(addRow);
-
-    groupEl.appendChild(body);
-    container.appendChild(groupEl);
-  }
-  document.getElementById('countTotal').textContent = total;
-  attachHandlers();
-  updateCounts();
+function flash(msg) {
+  statusMsg = msg; render(); clearTimeout(statusTimer);
+  statusTimer = setTimeout(() => { statusMsg = ""; render(); }, 2800);
 }
-
-function attachHandlers() {
-  document.querySelectorAll('.toggle-btn').forEach(btn => {
-    btn.onclick = () => {
-      const key = btn.dataset.key;
-      const val = btn.dataset.val;
-      if (!state[currentDate]) state[currentDate] = {};
-      state[currentDate][key] = (state[currentDate][key] === val) ? undefined : val;
-      if (state[currentDate][key] === undefined) delete state[currentDate][key];
-      persist();
-      render();
-    };
-  });
-
-  document.querySelectorAll('.remove-btn').forEach(btn => {
-    btn.onclick = () => {
-      const group = btn.dataset.group;
-      const name = btn.dataset.name;
-      const key = personKey(group, name);
-      roster[group] = (roster[group] || []).filter(n => n !== name);
-      for (const day of Object.values(state)) delete day[key];
-      persist();
-      render();
-    };
-  });
-
-  document.querySelectorAll('[data-add]').forEach(btn => {
-    btn.onclick = () => {
-      const group = btn.dataset.add;
-      const input = btn.parentElement.querySelector('input');
-      const name = (input.value || '').trim();
-      if (!name) return;
-      if (!(roster[group] || []).some(n => n.toLowerCase() === name.toLowerCase())) {
-        roster[group] = [...(roster[group] || []), name];
-        persist();
-        render();
-      }
-    };
-  });
-
-  document.querySelectorAll('.add-row input').forEach(input => {
-    input.onkeydown = (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        input.parentElement.querySelector('button').click();
-      }
-    };
-  });
-}
-
-function updateCounts() {
-  const dayState = state[currentDate] || {};
+function dayState() { return state[currentDate] || {}; }
+function getSub(group, date) { return submissions[submissionKey(group, date)] || null; }
+function countGroup(group) {
+  const people = roster[group] || [];
+  const day = dayState();
   let present = 0, absent = 0;
-  Object.values(dayState).forEach(v => { if (v === 'present') present++; if (v === 'absent') absent++; });
-  const total = parseInt(document.getElementById('countTotal').textContent || '0');
-  document.getElementById('countPresent').textContent = present;
-  document.getElementById('countAbsent').textContent = absent;
-  document.getElementById('countUnmarked').textContent = Math.max(total - present - absent, 0);
+  people.forEach(name => {
+    const v = day[personKey(group, name)];
+    if (v === "present") present++;
+    if (v === "absent") absent++;
+  });
+  return { present, absent, unmarked: Math.max(people.length - present - absent, 0), total: people.length };
 }
-
-function loadState() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) state = JSON.parse(saved);
-  } catch (e) { state = {}; }
-  try {
-    const savedRoster = localStorage.getItem(ROSTER_KEY);
-    if (savedRoster) roster = JSON.parse(savedRoster);
-  } catch (e) { roster = structuredClone(DEFAULT_ROSTER); }
-  render();
+function groupAttendance(group) {
+  const out = {}; const day = dayState();
+  (roster[group] || []).forEach(name => {
+    const key = personKey(group, name);
+    if (day[key]) out[key] = day[key];
+  });
+  return out;
 }
-
-dateInput.addEventListener('change', () => {
-  currentDate = dateInput.value;
-  render();
-});
-
-document.getElementById('saveBtn').onclick = () => {
-  persist();
-  flash('Saved ' + new Date().toLocaleTimeString());
-};
-
-document.getElementById('markAllPresent').onclick = () => {
+function setLeaderUrl(group) {
+  const url = new URL(location.href);
+  if (group) url.searchParams.set("leader", leaderSlug(group));
+  else { url.searchParams.delete("leader"); url.searchParams.delete("g"); }
+  history.replaceState({}, "", url.toString());
+}
+function openLeader(group) {
+  activeGroup = group; view = "leader";
+  notes = (getSub(group, currentDate) || {}).notes || "";
+  setLeaderUrl(group); render();
+}
+function goHome() { view = "home"; activeGroup = null; setLeaderUrl(null); render(); }
+function setStatus(group, name, val) {
   if (!state[currentDate]) state[currentDate] = {};
-  for (const [group, people] of Object.entries(roster)) {
-    people.forEach(name => { state[currentDate][personKey(group, name)] = 'present'; });
+  const key = personKey(group, name);
+  if (state[currentDate][key] === val) delete state[currentDate][key];
+  else state[currentDate][key] = val;
+  persist(); render();
+}
+function markGroupPresent(group) {
+  if (!state[currentDate]) state[currentDate] = {};
+  (roster[group] || []).forEach(name => { state[currentDate][personKey(group, name)] = "present"; });
+  persist(); flash("Marked group present");
+}
+async function compressImage(file) {
+  if (!file.type.startsWith("image/")) throw new Error("Please choose an image file.");
+  const bitmap = await createImageBitmap(file);
+  const maxDim = 1280;
+  const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
+  const w = Math.max(1, Math.round(bitmap.width * scale));
+  const h = Math.max(1, Math.round(bitmap.height * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = w; canvas.height = h;
+  canvas.getContext("2d").drawImage(bitmap, 0, 0, w, h);
+  bitmap.close();
+  return {
+    id: Date.now() + "-" + Math.random().toString(36).slice(2, 8),
+    name: file.name || "photo.jpg",
+    dataUrl: canvas.toDataURL("image/jpeg", 0.72),
+    addedAt: new Date().toISOString()
+  };
+}
+async function addImages(fileList) {
+  if (!activeGroup || !fileList || !fileList.length) return;
+  const key = submissionKey(activeGroup, currentDate);
+  const current = getSub(activeGroup, currentDate) || {
+    group: activeGroup, date: currentDate, attendance: {}, images: [], notes: "", submittedAt: null
+  };
+  const remaining = MAX_IMAGES - current.images.length;
+  if (remaining <= 0) return flash("Max " + MAX_IMAGES + " photos per week");
+  uploading = true; render();
+  try {
+    const selected = Array.from(fileList).slice(0, remaining);
+    const compressed = [];
+    for (const file of selected) compressed.push(await compressImage(file));
+    submissions[key] = {
+      ...current, attendance: groupAttendance(activeGroup), notes,
+      images: current.images.concat(compressed)
+    };
+    persist();
+    flash(compressed.length === 1 ? "Photo added" : compressed.length + " photos added");
+  } catch (e) { flash(e.message || "Could not add photo"); }
+  finally { uploading = false; render(); }
+}
+function removeImage(id) {
+  const key = submissionKey(activeGroup, currentDate);
+  const current = getSub(activeGroup, currentDate);
+  if (!current) return;
+  current.images = current.images.filter(img => img.id !== id);
+  submissions[key] = current; persist(); render();
+}
+function submitWeek() {
+  if (!activeGroup) return;
+  const key = submissionKey(activeGroup, currentDate);
+  const current = getSub(activeGroup, currentDate) || { images: [] };
+  submissions[key] = {
+    group: activeGroup, date: currentDate, attendance: groupAttendance(activeGroup),
+    images: current.images || [], notes: notes.trim(), submittedAt: new Date().toISOString()
+  };
+  persist(); flash("Weekly submission saved");
+}
+function addPerson(group, name) {
+  name = (name || "").trim();
+  if (!name) return;
+  if ((roster[group] || []).some(n => n.toLowerCase() === name.toLowerCase())) return;
+  roster[group] = (roster[group] || []).concat(name); persist(); render();
+}
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function renderHome() {
+  const cards = Object.entries(roster).map(([group, people]) => {
+    const sub = getSub(group, currentDate);
+    const submitted = !!(sub && sub.submittedAt);
+    const photos = (sub && sub.images && sub.images.length) || 0;
+    return `<button type="button" class="leader-card${submitted ? ' submitted' : ''}" data-open="${esc(group)}">
+      <span class="leader-name">${esc(leaderLabel(group))}</span>
+      <span class="leader-meta">${people.length} people${photos ? ' · ' + photos + ' photo' + (photos===1?'':'s') : ''}</span>
+      <span class="leader-status${submitted ? ' on' : ''}">${submitted ? 'Submitted' : 'Tap to submit'}</span>
+    </button>`;
+  }).join("");
+  app.innerHTML = `
+    <header><div class="header-inner">
+      <h1>Attendance <span>Ledger</span></h1>
+      <div class="date-row"><label for="weekDate">Week of</label>
+      <input id="weekDate" type="date" value="${currentDate}"></div>
+    </div></header>
+    <div class="hero-copy">
+      <h2>Who is submitting this week?</h2>
+      <p>Each leader opens their group, marks attendance, adds photos, and submits for the week.</p>
+    </div>
+    <main class="leader-grid">${cards}</main>
+    <div class="actions"><button type="button" class="secondary" id="viewAll">View all groups</button></div>
+    <div class="status-msg">Leaders can bookmark their personal link, e.g. ?leader=aliye</div>`;
+  document.getElementById("weekDate").onchange = e => { currentDate = e.target.value; render(); };
+  document.getElementById("viewAll").onclick = () => { view = "overview"; render(); };
+  app.querySelectorAll("[data-open]").forEach(btn => { btn.onclick = () => openLeader(btn.getAttribute("data-open")); });
+}
+function renderLeader() {
+  const people = roster[activeGroup] || [];
+  const counts = countGroup(activeGroup);
+  const sub = getSub(activeGroup, currentDate);
+  const images = (sub && sub.images) || [];
+  const submittedAt = sub && sub.submittedAt;
+  const day = dayState();
+  const rows = people.map(name => {
+    const key = personKey(activeGroup, name);
+    const current = day[key];
+    return `<div class="person-row"><span class="person-name">${esc(name)}</span>
+      <span class="toggle-group">
+        <button type="button" class="toggle-btn present${current==='present'?' active':''}" data-name="${esc(name)}" data-val="present">Present</button>
+        <button type="button" class="toggle-btn absent${current==='absent'?' active':''}" data-name="${esc(name)}" data-val="absent">Absent</button>
+      </span></div>`;
+  }).join("");
+  const photos = images.map(img => `
+    <figure class="photo-tile"><img src="${img.dataUrl}" alt="${esc(img.name)}">
+    <button type="button" class="photo-remove" data-remove="${esc(img.id)}">Remove</button></figure>`).join("");
+  app.innerHTML = `
+    <header><div class="header-inner"><div>
+      <button type="button" class="back-link" id="backHome">← All leaders</button>
+      <h1>${esc(leaderLabel(activeGroup))} <span>Group</span></h1>
+    </div>
+    <div class="date-row"><label for="leaderDate">Week of</label>
+    <input id="leaderDate" type="date" value="${currentDate}"></div></div></header>
+    <div class="summary-bar">
+      <div>Present: <b>${counts.present}</b></div>
+      <div>Absent: <b>${counts.absent}</b></div>
+      <div>Not marked: <b>${counts.unmarked}</b></div>
+      <div>Photos: <b>${images.length}</b></div>
+    </div>
+    <div class="actions">
+      <button type="button" id="submitBtn">${submittedAt ? "Update submission" : "Submit this week"}</button>
+      <button type="button" class="secondary" id="markAll">Mark all present</button>
+    </div>
+    <div class="status-msg">${esc(statusMsg || (submittedAt ? ("Last submitted " + new Date(submittedAt).toLocaleString()) : "Mark attendance, add photos, then submit."))}</div>
+    <main>
+      <section class="group">
+        <div class="group-head static"><h2>Attendance</h2><span class="group-count">${people.length}</span></div>
+        <div class="group-body">${rows}
+          <div class="add-row"><input id="newName" type="text" placeholder="Add a name…">
+          <button type="button" id="addName">Add</button></div>
+        </div>
+      </section>
+      <section class="group">
+        <div class="group-head static"><h2>Weekly photos</h2><span class="group-count">${images.length}/${MAX_IMAGES}</span></div>
+        <div class="group-body photo-body">
+          <p class="photo-hint">Add pictures from this week’s gathering (up to ${MAX_IMAGES}).</p>
+          <div class="photo-actions">
+            <button type="button" id="takePhoto" ${uploading || images.length>=MAX_IMAGES ? "disabled" : ""}>Take photo</button>
+            <button type="button" id="uploadPhotos" ${uploading || images.length>=MAX_IMAGES ? "disabled" : ""}>Upload images</button>
+            <input id="cameraInput" type="file" accept="image/*" capture="environment" hidden>
+            <input id="fileInput" type="file" accept="image/*" multiple hidden>
+          </div>
+          ${images.length ? `<div class="photo-grid">${photos}</div>` : `<p class="photo-empty">No photos yet for this week.</p>`}
+        </div>
+      </section>
+      <section class="group">
+        <div class="group-head static"><h2>Notes</h2></div>
+        <div class="group-body"><textarea id="notesInput" class="notes-input" rows="3" placeholder="Optional notes for this week…">${esc(notes)}</textarea></div>
+      </section>
+      <div class="actions"><button type="button" id="submitBtn2">${submittedAt ? "Update submission" : "Submit this week"}</button></div>
+    </main>`;
+  document.getElementById("backHome").onclick = goHome;
+  document.getElementById("leaderDate").onchange = e => {
+    currentDate = e.target.value;
+    notes = (getSub(activeGroup, currentDate) || {}).notes || "";
+    render();
+  };
+  document.getElementById("submitBtn").onclick = submitWeek;
+  document.getElementById("submitBtn2").onclick = submitWeek;
+  document.getElementById("markAll").onclick = () => markGroupPresent(activeGroup);
+  document.getElementById("addName").onclick = () => addPerson(activeGroup, document.getElementById("newName").value);
+  document.getElementById("newName").onkeydown = e => { if (e.key === "Enter") { e.preventDefault(); addPerson(activeGroup, e.target.value); } };
+  document.getElementById("notesInput").oninput = e => { notes = e.target.value; };
+  document.getElementById("takePhoto").onclick = () => document.getElementById("cameraInput").click();
+  document.getElementById("uploadPhotos").onclick = () => document.getElementById("fileInput").click();
+  document.getElementById("cameraInput").onchange = e => addImages(e.target.files);
+  document.getElementById("fileInput").onchange = e => addImages(e.target.files);
+  app.querySelectorAll(".toggle-btn").forEach(btn => { btn.onclick = () => setStatus(activeGroup, btn.dataset.name, btn.dataset.val); });
+  app.querySelectorAll("[data-remove]").forEach(btn => { btn.onclick = () => removeImage(btn.getAttribute("data-remove")); });
+}
+function renderOverview() {
+  const sections = Object.entries(roster).map(([group, people]) => {
+    const counts = countGroup(group);
+    const sub = getSub(group, currentDate);
+    const photos = ((sub && sub.images) || []).map(img => `
+      <figure class="photo-tile"><img src="${img.dataUrl}" alt="${esc(img.name)}"></figure>`).join("");
+    return `<section class="group">
+      <button type="button" class="group-head" data-open="${esc(group)}">
+        <h2>${esc(group)}${sub && sub.submittedAt ? ' <span class="pill">Submitted</span>' : ''}</h2>
+        <span class="group-count">${counts.present}/${counts.total} · ${(sub && sub.images && sub.images.length) || 0} photos</span>
+      </button>
+      ${photos || (sub && sub.notes) ? `<div class="group-body">
+        ${photos ? `<div class="photo-grid">${photos}</div>` : ""}
+        ${sub && sub.notes ? `<p class="notes-preview">${esc(sub.notes)}</p>` : ""}
+      </div>` : ""}
+    </section>`;
+  }).join("");
+  app.innerHTML = `
+    <header><div class="header-inner"><div>
+      <button type="button" class="back-link" id="backHome">← Leaders</button>
+      <h1>All <span>Groups</span></h1>
+    </div>
+    <div class="date-row"><label for="overviewDate">Week of</label>
+    <input id="overviewDate" type="date" value="${currentDate}"></div></div></header>
+    <main>${sections}</main>`;
+  document.getElementById("backHome").onclick = goHome;
+  document.getElementById("overviewDate").onchange = e => { currentDate = e.target.value; render(); };
+  app.querySelectorAll("[data-open]").forEach(btn => { btn.onclick = () => openLeader(btn.getAttribute("data-open")); });
+}
+function render() {
+  if (view === "leader" && activeGroup) renderLeader();
+  else if (view === "overview") renderOverview();
+  else renderHome();
+}
+function boot() {
+  state = read(ATT_KEY, {});
+  roster = read(ROSTER_KEY, structuredClone(DEFAULT_ROSTER));
+  submissions = read(SUB_KEY, {});
+  const params = new URLSearchParams(location.search);
+  const leader = params.get("leader") || params.get("g");
+  if (leader) {
+    const group = findGroupBySlug(leader);
+    if (group) { activeGroup = group; view = "leader"; notes = (getSub(group, currentDate) || {}).notes || ""; }
   }
-  persist();
   render();
-  flash('Marked everyone present');
-};
-
-document.getElementById('exportBtn').onclick = () => {
-  const dayState = state[currentDate] || {};
-  let rows = [['Group','Name','Status']];
-  for (const [group, people] of Object.entries(roster)) {
-    people.forEach(name => {
-      const status = dayState[personKey(group, name)] || 'not marked';
-      rows.push([group, name, status]);
-    });
-  }
-  const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `attendance-${currentDate}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-};
-
-loadState();
+}
+boot();
 </script>
-
 </body>
 </html>

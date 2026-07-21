@@ -312,6 +312,202 @@
   gap: 8px;
 }
 
+.attendance-app .hero-copy {
+  max-width: 880px;
+  margin: 22px auto 0;
+  padding: 0 24px;
+}
+
+.attendance-app .hero-copy h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 22px;
+  margin: 0 0 8px;
+  color: var(--forest-deep);
+}
+
+.attendance-app .hero-copy p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.45;
+  max-width: 36rem;
+}
+
+.attendance-app .leader-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.attendance-app .leader-card {
+  text-align: left;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px 16px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.attendance-app .leader-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--gold);
+}
+
+.attendance-app .leader-card.submitted {
+  border-color: var(--forest);
+  background: linear-gradient(180deg, #fff 0%, #f3f7f4 100%);
+}
+
+.attendance-app .leader-name {
+  font-family: Georgia, serif;
+  font-size: 20px;
+  color: var(--forest-deep);
+}
+
+.attendance-app .leader-meta {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.attendance-app .leader-status {
+  margin-top: 8px;
+  font-size: 12.5px;
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.attendance-app .leader-status.on {
+  color: var(--forest);
+}
+
+.attendance-app .back-link {
+  background: transparent;
+  border: none;
+  color: var(--gold-soft);
+  font-size: 13px;
+  padding: 0;
+  margin-bottom: 6px;
+  cursor: pointer;
+  display: block;
+}
+
+.attendance-app .group-head.static {
+  cursor: default;
+}
+
+.attendance-app .photo-body {
+  padding: 14px;
+}
+
+.attendance-app .photo-hint,
+.attendance-app .photo-empty,
+.attendance-app .notes-preview {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 13.5px;
+}
+
+.attendance-app .photo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.attendance-app .photo-actions button {
+  background: white;
+  color: var(--forest-deep);
+  border: 1px solid var(--line);
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+
+.attendance-app .photo-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.attendance-app .photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.attendance-app .photo-grid.compact {
+  padding-bottom: 8px;
+}
+
+.attendance-app .photo-tile {
+  margin: 0;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: #eee;
+  aspect-ratio: 1;
+}
+
+.attendance-app .photo-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.attendance-app .photo-remove {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 6px;
+  border: none;
+  background: rgba(26, 51, 39, 0.85);
+  color: white;
+  border-radius: 6px;
+  padding: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.attendance-app .notes-input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font: inherit;
+  resize: vertical;
+  min-height: 84px;
+  background: white;
+  color: var(--ink);
+}
+
+.attendance-app .bottom-actions {
+  margin: 8px auto 24px;
+  padding: 0;
+}
+
+.attendance-app .pill {
+  display: inline-block;
+  margin-left: 8px;
+  font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
+.attendance-app .submitted-pill {
+  background: var(--forest);
+  color: white;
+}
+
 @media (max-width: 640px) {
   .attendance-app .person-row {
     flex-direction: column;

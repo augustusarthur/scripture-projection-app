@@ -4,7 +4,7 @@ import { AttendanceLedger } from "@/components/attendance/AttendanceLedger";
 export const metadata: Metadata = {
   title: "Attendance Ledger",
   description:
-    "Track small-group church attendance by date, mark present or absent, and export CSV.",
+    "Leaders submit weekly small-group attendance with photos for First Love Church.",
 };
 
 export default function AttendancePage() {
