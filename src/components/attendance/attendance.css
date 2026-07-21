@@ -1,0 +1,329 @@
+.attendance-app {
+  --ink: #1f2a24;
+  --paper: #f6f3ea;
+  --card: #ffffff;
+  --forest: #2c4a3b;
+  --forest-deep: #1a3327;
+  --gold: #c8952f;
+  --gold-soft: #f0deb3;
+  --line: #d9d2bd;
+  --muted: #7c7568;
+  --present: #2c4a3b;
+  --absent: #b6503a;
+  margin: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 10% -10%, rgba(240, 222, 179, 0.55), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 100% 0%, rgba(44, 74, 59, 0.08), transparent 50%),
+    var(--paper);
+  color: var(--ink);
+  font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+  padding: 0 0 60px;
+  min-height: 100vh;
+}
+
+.attendance-app * {
+  box-sizing: border-box;
+}
+
+.attendance-app header {
+  background: linear-gradient(160deg, var(--forest-deep) 0%, #243f32 100%);
+  color: var(--paper);
+  padding: 28px 24px 22px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+
+.attendance-app .header-inner {
+  max-width: 880px;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.attendance-app h1 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 26px;
+  margin: 0;
+  letter-spacing: 0.3px;
+}
+
+.attendance-app h1 span {
+  color: var(--gold-soft);
+  font-style: italic;
+}
+
+.attendance-app .date-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.attendance-app .date-row label {
+  font-size: 13px;
+  color: var(--gold-soft);
+}
+
+.attendance-app .date-row input[type="date"] {
+  background: var(--forest);
+  border: 1px solid var(--gold);
+  color: var(--paper);
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.attendance-app .summary-bar {
+  max-width: 880px;
+  margin: 18px auto 0;
+  padding: 0 24px;
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.attendance-app .summary-bar b {
+  color: var(--forest-deep);
+  font-size: 16px;
+}
+
+.attendance-app main {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.attendance-app .group {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin-bottom: 18px;
+  overflow: hidden;
+  animation: attendance-fade-up 0.35s ease both;
+}
+
+.attendance-app .group:nth-child(2) {
+  animation-delay: 0.04s;
+}
+.attendance-app .group:nth-child(3) {
+  animation-delay: 0.08s;
+}
+.attendance-app .group:nth-child(4) {
+  animation-delay: 0.12s;
+}
+.attendance-app .group:nth-child(5) {
+  animation-delay: 0.16s;
+}
+.attendance-app .group:nth-child(6) {
+  animation-delay: 0.2s;
+}
+
+@keyframes attendance-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.attendance-app .group-head {
+  background: var(--gold-soft);
+  padding: 12px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+}
+
+.attendance-app .group-head h2 {
+  font-family: Georgia, serif;
+  font-size: 17px;
+  margin: 0;
+  color: var(--forest-deep);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.attendance-app .group-count {
+  font-size: 12.5px;
+  color: var(--forest);
+  background: rgba(255, 255, 255, 0.6);
+  padding: 3px 9px;
+  border-radius: 20px;
+}
+
+.attendance-app .group-body {
+  padding: 6px 10px;
+}
+
+.attendance-app .person-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px;
+  border-bottom: 1px solid #f0ede1;
+  font-size: 15px;
+}
+
+.attendance-app .person-row:last-of-type {
+  border-bottom: none;
+}
+
+.attendance-app .person-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.attendance-app .toggle-group {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.attendance-app .toggle-btn {
+  border: 1px solid var(--line);
+  background: var(--paper);
+  color: var(--muted);
+  padding: 6px 13px;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.attendance-app .toggle-btn.present.active {
+  background: var(--present);
+  border-color: var(--present);
+  color: white;
+}
+
+.attendance-app .toggle-btn.absent.active {
+  background: var(--absent);
+  border-color: var(--absent);
+  color: white;
+}
+
+.attendance-app .add-row {
+  display: flex;
+  gap: 8px;
+  padding: 10px;
+  border-top: 1px solid #f0ede1;
+}
+
+.attendance-app .add-row input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  color: var(--ink);
+}
+
+.attendance-app .add-row button,
+.attendance-app .actions button {
+  background: var(--forest);
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.attendance-app .actions {
+  display: flex;
+  gap: 10px;
+  max-width: 880px;
+  margin: 6px auto 0;
+  padding: 0 24px;
+  flex-wrap: wrap;
+}
+
+.attendance-app .actions button {
+  background: var(--forest-deep);
+  padding: 10px 16px;
+  font-size: 13.5px;
+}
+
+.attendance-app .actions button.secondary {
+  background: white;
+  color: var(--forest-deep);
+  border: 1px solid var(--line);
+}
+
+.attendance-app .status-msg {
+  max-width: 880px;
+  margin: 10px auto 0;
+  padding: 0 24px;
+  font-size: 12.5px;
+  color: var(--muted);
+  min-height: 16px;
+}
+
+.attendance-app .collapsed .group-body {
+  display: none;
+}
+
+.attendance-app .chevron {
+  transition: transform 0.15s ease;
+  color: var(--forest);
+  font-size: 12px;
+  display: inline-block;
+}
+
+.attendance-app .collapsed .chevron {
+  transform: rotate(-90deg);
+}
+
+.attendance-app .remove-btn {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px 6px;
+  opacity: 0.7;
+}
+
+.attendance-app .remove-btn:hover {
+  color: var(--absent);
+  opacity: 1;
+}
+
+.attendance-app .person-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .attendance-app .person-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .attendance-app .person-actions {
+    justify-content: space-between;
+  }
+
+  .attendance-app .toggle-btn {
+    flex: 1;
+    text-align: center;
+  }
+}
