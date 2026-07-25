@@ -11,9 +11,11 @@ Track Sunday / small-group attendance by date:
 - Add or remove people from the roster
 - Export the day as CSV
 
-Open the app at [`/attendance`](./src/app/attendance) locally, or the live GitHub Pages site after deploy:
+Open the app at [`/attendance`](./src/app/attendance) locally, or the live site:
 
-**https://augustusarthur.github.io/scripture-projection-app/**
+**https://lucid-flow-513iaci.shipstatic.com**
+
+(Claim it to keep permanently — see [DEPLOY.md](./DEPLOY.md).)
 
 ---
 

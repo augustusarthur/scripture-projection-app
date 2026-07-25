@@ -1,22 +1,24 @@
 # Deploy guides
 
-## Attendance Ledger — public URL (GitHub Pages)
+## Attendance Ledger — live URL
 
-The attendance tracker is a static site. A ready-to-serve copy is already on the **`gh-pages`** branch.
+**Current live site:** https://lucid-flow-513iaci.shipstatic.com
 
-### Enable the URL (about 30 seconds)
+ShipStatic free deploys expire after ~3 days unless claimed. To keep this URL permanently, open the claim link while signed in at shipstatic.com:
+
+https://my.shipstatic.com/claim/34b16ca70588434254a55429a6cfe0a30908ac5155354349e704bf84a1d3e2ed
+
+### Permanent option: GitHub Pages
+
+A ready-to-serve copy is on the **`gh-pages`** branch.
 
 1. Open [Settings → Pages](https://github.com/augustusarthur/scripture-projection-app/settings/pages)
 2. **Build and deployment → Source** → **Deploy from a branch**
 3. Branch: **`gh-pages`**, folder: **`/`** → **Save**
 
-Live site:
-
-**https://augustusarthur.github.io/scripture-projection-app/**
+Then use: **https://augustusarthur.github.io/scripture-projection-app/**
 
 Works on your phone. Attendance saves in the browser — no database or env vars.
-
-After merging the Attendance PR, you can instead set Source to **GitHub Actions** and use the **Deploy Attendance to GitHub Pages** workflow (deploys from `docs/`).
 
 ---
 
