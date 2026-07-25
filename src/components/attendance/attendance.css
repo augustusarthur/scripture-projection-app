@@ -339,16 +339,56 @@
   gap: 14px;
 }
 
+.attendance-app .total-banner {
+  max-width: 880px;
+  margin: 18px auto 0;
+  padding: 16px 20px;
+  width: calc(100% - 48px);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  background: linear-gradient(135deg, #243f32, var(--forest-deep));
+  color: var(--paper);
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(26, 51, 39, 0.18);
+}
+
+.attendance-app .total-banner.compact {
+  margin-left: 24px;
+  margin-right: 24px;
+}
+
+.attendance-app .total-label {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+  margin-bottom: 4px;
+}
+
+.attendance-app .total-number {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 40px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.attendance-app .total-meta {
+  font-size: 13px;
+  color: rgba(246, 243, 234, 0.85);
+}
+
 .attendance-app .leader-card {
   text-align: left;
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: 12px;
-  padding: 18px 16px;
-  cursor: pointer;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 6px;
   transition: transform 0.15s ease, border-color 0.15s ease;
 }
 
@@ -360,6 +400,162 @@
 .attendance-app .leader-card.submitted {
   border-color: var(--forest);
   background: linear-gradient(180deg, #fff 0%, #f3f7f4 100%);
+}
+
+.attendance-app .leader-card-main {
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 18px 16px 10px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font: inherit;
+  color: inherit;
+  width: 100%;
+}
+
+.attendance-app .leader-remove {
+  border: none;
+  border-top: 1px solid #f0ede1;
+  background: transparent;
+  color: var(--muted);
+  padding: 10px 16px;
+  font-size: 12.5px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.attendance-app .leader-remove:hover {
+  color: var(--absent);
+}
+
+.attendance-app .manage-panel {
+  max-width: 880px;
+  margin: 8px auto 0;
+  padding: 0 24px 24px;
+}
+
+.attendance-app .manage-panel h3 {
+  font-family: Georgia, serif;
+  font-size: 16px;
+  margin: 0 0 10px;
+  color: var(--forest-deep);
+}
+
+.attendance-app .manage-panel .add-row {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  padding: 12px;
+}
+
+.attendance-app .actions button.danger {
+  background: white;
+  color: var(--absent);
+  border: 1px solid #e2b4aa;
+}
+
+.attendance-app .stat-strip {
+  max-width: 880px;
+  margin: 18px auto 0;
+  padding: 0 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.attendance-app .stat-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.attendance-app .stat-card.highlight {
+  background: linear-gradient(160deg, #243f32, var(--forest-deep));
+  color: var(--paper);
+  border-color: transparent;
+}
+
+.attendance-app .stat-card.highlight .stat-label {
+  color: var(--gold-soft);
+}
+
+.attendance-app .stat-label {
+  font-size: 11.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.attendance-app .stat-card strong {
+  font-family: Georgia, serif;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.attendance-app .analytics-row {
+  padding: 12px 8px;
+  border-bottom: 1px solid #f0ede1;
+}
+
+.attendance-app .analytics-row:last-child {
+  border-bottom: none;
+}
+
+.attendance-app .analytics-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.attendance-app .analytics-row-main .muted {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.attendance-app .linkish {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--forest-deep);
+  cursor: pointer;
+  text-align: left;
+}
+
+.attendance-app .rate-bar {
+  position: relative;
+  height: 22px;
+  background: #efe9d8;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.attendance-app .rate-bar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--forest), #3d6a54);
+  min-width: 0;
+  transition: width 0.25s ease;
+}
+
+.attendance-app .rate-bar em {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--forest-deep);
 }
 
 .attendance-app .leader-name {

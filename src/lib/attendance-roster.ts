@@ -110,6 +110,157 @@ export function countRoster(roster: Roster) {
   return Object.values(roster).reduce((sum, people) => sum + people.length, 0);
 }
 
+export function formatGroupName(leaderName: string) {
+  const trimmed = leaderName.trim().replace(/\s+/g, " ");
+  if (!trimmed) return "";
+  if (/group$/i.test(trimmed)) return trimmed;
+  if (trimmed.toLowerCase().endsWith("s")) return `${trimmed}' Group`;
+  return `${trimmed}'s Group`;
+}
+
+export type GroupAnalytics = {
+  group: string;
+  label: string;
+  members: number;
+  present: number;
+  absent: number;
+  unmarked: number;
+  rate: number;
+  submitted: boolean;
+  photos: number;
+};
+
+export type WeekAnalytics = {
+  date: string;
+  present: number;
+  absent: number;
+  unmarked: number;
+  total: number;
+  rate: number;
+  submittedGroups: number;
+  totalGroups: number;
+};
+
+export type AttendanceAnalytics = {
+  totalMembers: number;
+  totalLeaders: number;
+  thisWeek: WeekAnalytics;
+  byGroup: GroupAnalytics[];
+  recentWeeks: WeekAnalytics[];
+  averageRate: number;
+};
+
+function dayTotals(
+  roster: Roster,
+  day: DayAttendance,
+): Omit<WeekAnalytics, "date" | "submittedGroups" | "totalGroups"> {
+  let present = 0;
+  let absent = 0;
+  let total = 0;
+  for (const [group, people] of Object.entries(roster)) {
+    for (const name of people) {
+      total += 1;
+      const status = day[personKey(group, name)];
+      if (status === "present") present += 1;
+      if (status === "absent") absent += 1;
+    }
+  }
+  const unmarked = Math.max(total - present - absent, 0);
+  const marked = present + absent;
+  return {
+    present,
+    absent,
+    unmarked,
+    total,
+    rate: marked ? Math.round((present / marked) * 100) : 0,
+  };
+}
+
+export function buildAnalytics(
+  roster: Roster,
+  state: AttendanceState,
+  submissions: SubmissionsState,
+  currentDate: string,
+): AttendanceAnalytics {
+  const totalMembers = countRoster(roster);
+  const totalLeaders = Object.keys(roster).length;
+  const day = state[currentDate] || {};
+  const totals = dayTotals(roster, day);
+
+  let submittedGroups = 0;
+  const byGroup: GroupAnalytics[] = Object.entries(roster).map(
+    ([group, people]) => {
+      let present = 0;
+      let absent = 0;
+      for (const name of people) {
+        const status = day[personKey(group, name)];
+        if (status === "present") present += 1;
+        if (status === "absent") absent += 1;
+      }
+      const marked = present + absent;
+      const sub = submissions[submissionKey(group, currentDate)];
+      if (sub?.submittedAt) submittedGroups += 1;
+      return {
+        group,
+        label: leaderLabel(group),
+        members: people.length,
+        present,
+        absent,
+        unmarked: Math.max(people.length - present - absent, 0),
+        rate: marked ? Math.round((present / marked) * 100) : 0,
+        submitted: Boolean(sub?.submittedAt),
+        photos: sub?.images.length || 0,
+      };
+    },
+  );
+
+  const dates = new Set<string>(Object.keys(state));
+  for (const key of Object.keys(submissions)) {
+    const date = key.split("|").pop();
+    if (date) dates.add(date);
+  }
+  dates.add(currentDate);
+
+  const recentWeeks = Array.from(dates)
+    .sort((a, b) => b.localeCompare(a))
+    .slice(0, 8)
+    .map((date) => {
+      const weekTotals = dayTotals(roster, state[date] || {});
+      let submitted = 0;
+      for (const group of Object.keys(roster)) {
+        if (submissions[submissionKey(group, date)]?.submittedAt) submitted += 1;
+      }
+      return {
+        date,
+        ...weekTotals,
+        submittedGroups: submitted,
+        totalGroups: totalLeaders,
+      };
+    });
+
+  const weeksWithMarks = recentWeeks.filter((week) => week.present + week.absent > 0);
+  const averageRate = weeksWithMarks.length
+    ? Math.round(
+        weeksWithMarks.reduce((sum, week) => sum + week.rate, 0) /
+          weeksWithMarks.length,
+      )
+    : 0;
+
+  return {
+    totalMembers,
+    totalLeaders,
+    thisWeek: {
+      date: currentDate,
+      ...totals,
+      submittedGroups,
+      totalGroups: totalLeaders,
+    },
+    byGroup,
+    recentWeeks,
+    averageRate,
+  };
+}
+
 export function leaderSlug(group: string) {
   return group
     .toLowerCase()

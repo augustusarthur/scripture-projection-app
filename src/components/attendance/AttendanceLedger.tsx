@@ -13,9 +13,12 @@ import {
   SUBMISSIONS_STORAGE_KEY,
   SubmissionsState,
   WeekSubmission,
+  buildAnalytics,
   compressImageFile,
+  countRoster,
   emptySubmission,
   findGroupBySlug,
+  formatGroupName,
   leaderLabel,
   leaderSlug,
   personKey,
@@ -24,7 +27,7 @@ import {
 } from "@/lib/attendance-roster";
 import "./attendance.css";
 
-type View = "home" | "leader" | "overview";
+type View = "home" | "leader" | "overview" | "dashboard";
 
 function readJson<T>(key: string, fallback: T): T {
   try {
@@ -65,6 +68,21 @@ function countGroup(attendance: DayAttendance, group: string, people: string[]) 
   };
 }
 
+function purgePersonKeys(
+  prev: AttendanceState,
+  match: (key: string) => boolean,
+): AttendanceState {
+  const next: AttendanceState = {};
+  for (const [date, day] of Object.entries(prev)) {
+    const copy: DayAttendance = {};
+    for (const [key, value] of Object.entries(day)) {
+      if (!match(key)) copy[key] = value;
+    }
+    next[date] = copy;
+  }
+  return next;
+}
+
 export function AttendanceLedger() {
   const [ready, setReady] = useState(false);
   const [view, setView] = useState<View>("home");
@@ -75,6 +93,7 @@ export function AttendanceLedger() {
   const [submissions, setSubmissions] = useState<SubmissionsState>({});
   const [notes, setNotes] = useState("");
   const [draftNames, setDraftNames] = useState<Record<string, string>>({});
+  const [newLeaderName, setNewLeaderName] = useState("");
   const [statusMsg, setStatusMsg] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -96,8 +115,7 @@ export function AttendanceLedger() {
         setActiveGroup(group);
         setView("leader");
         const key = submissionKey(group, todayISODate());
-        const existing = savedSubs[key];
-        setNotes(existing?.notes || "");
+        setNotes(savedSubs[key]?.notes || "");
       }
     }
     setReady(true);
@@ -121,9 +139,7 @@ export function AttendanceLedger() {
   const dayState = state[currentDate] || {};
   const activePeople = activeGroup ? roster[activeGroup] || [] : [];
   const activeKey =
-    activeGroup && currentDate
-      ? submissionKey(activeGroup, currentDate)
-      : null;
+    activeGroup && currentDate ? submissionKey(activeGroup, currentDate) : null;
   const activeSubmission =
     activeKey && submissions[activeKey]
       ? submissions[activeKey]
@@ -134,6 +150,12 @@ export function AttendanceLedger() {
             groupAttendance(dayState, activeGroup, activePeople),
           )
         : null;
+
+  const totalMembers = useMemo(() => countRoster(roster), [roster]);
+  const analytics = useMemo(
+    () => buildAnalytics(roster, state, submissions, currentDate),
+    [roster, state, submissions, currentDate],
+  );
 
   const leaderCounts = useMemo(() => {
     if (!activeGroup) return null;
@@ -150,9 +172,8 @@ export function AttendanceLedger() {
     setView("leader");
     const key = submissionKey(group, currentDate);
     setNotes(submissions[key]?.notes || "");
-    const slug = leaderSlug(group);
     const url = new URL(window.location.href);
-    url.searchParams.set("leader", slug);
+    url.searchParams.set("leader", leaderSlug(group));
     window.history.replaceState({}, "", url.toString());
   }
 
@@ -184,6 +205,63 @@ export function AttendanceLedger() {
       return { ...prev, [currentDate]: day };
     });
     flash("Marked group present");
+  }
+
+  function addLeader() {
+    const group = formatGroupName(newLeaderName);
+    if (!group) {
+      flash("Enter a leader name");
+      return;
+    }
+    if (roster[group] || Object.keys(roster).some((g) => g.toLowerCase() === group.toLowerCase())) {
+      flash("That leader already exists");
+      return;
+    }
+    setRoster((prev) => ({ ...prev, [group]: [] }));
+    setNewLeaderName("");
+    flash(`Added ${leaderLabel(group)}`);
+  }
+
+  function removeLeader(group: string) {
+    if (!window.confirm(`Remove ${leaderLabel(group)} and their members?`)) return;
+    setRoster((prev) => {
+      const next = { ...prev };
+      delete next[group];
+      return next;
+    });
+    setState((prev) => purgePersonKeys(prev, (key) => key.startsWith(`${group}|`)));
+    setSubmissions((prev) => {
+      const next = { ...prev };
+      for (const key of Object.keys(next)) {
+        if (key.startsWith(`${group}|`)) delete next[key];
+      }
+      return next;
+    });
+    if (activeGroup === group) goHome();
+    flash("Leader removed");
+  }
+
+  function addPerson(group: string) {
+    const name = (draftNames[group] || "").trim();
+    if (!name) return;
+    setRoster((prev) => {
+      const people = prev[group] || [];
+      if (people.some((p) => p.toLowerCase() === name.toLowerCase())) return prev;
+      return { ...prev, [group]: [...people, name] };
+    });
+    setDraftNames((prev) => ({ ...prev, [group]: "" }));
+    flash(`Added ${name}`);
+  }
+
+  function removePerson(group: string, name: string) {
+    if (!window.confirm(`Remove ${name} from ${leaderLabel(group)}?`)) return;
+    const key = personKey(group, name);
+    setRoster((prev) => ({
+      ...prev,
+      [group]: (prev[group] || []).filter((person) => person !== name),
+    }));
+    setState((prev) => purgePersonKeys(prev, (k) => k === key));
+    flash(`Removed ${name}`);
   }
 
   async function addImages(files: FileList | null) {
@@ -265,17 +343,6 @@ export function AttendanceLedger() {
     flash("Weekly submission saved");
   }
 
-  function addPerson(group: string) {
-    const name = (draftNames[group] || "").trim();
-    if (!name) return;
-    setRoster((prev) => {
-      const people = prev[group] || [];
-      if (people.some((p) => p.toLowerCase() === name.toLowerCase())) return prev;
-      return { ...prev, [group]: [...people, name] };
-    });
-    setDraftNames((prev) => ({ ...prev, [group]: "" }));
-  }
-
   function onDateChange(value: string) {
     setCurrentDate(value);
     if (activeGroup) {
@@ -295,6 +362,121 @@ export function AttendanceLedger() {
           </div>
         </header>
         <div className="status-msg">Loading…</div>
+      </div>
+    );
+  }
+
+  if (view === "dashboard") {
+    const week = analytics.thisWeek;
+    return (
+      <div className="attendance-app">
+        <header>
+          <div className="header-inner">
+            <div>
+              <button type="button" className="back-link" onClick={goHome}>
+                ← Leaders
+              </button>
+              <h1>
+                Attendance <span>Dashboard</span>
+              </h1>
+            </div>
+            <div className="date-row">
+              <label htmlFor="dashDate">Week of</label>
+              <input
+                id="dashDate"
+                type="date"
+                value={currentDate}
+                onChange={(event) => setCurrentDate(event.target.value)}
+              />
+            </div>
+          </div>
+        </header>
+
+        <div className="stat-strip">
+          <div className="stat-card highlight">
+            <span className="stat-label">Total members</span>
+            <strong>{analytics.totalMembers}</strong>
+          </div>
+          <div className="stat-card">
+            <span className="stat-label">Leaders</span>
+            <strong>{analytics.totalLeaders}</strong>
+          </div>
+          <div className="stat-card">
+            <span className="stat-label">Present this week</span>
+            <strong>{week.present}</strong>
+          </div>
+          <div className="stat-card">
+            <span className="stat-label">Attendance rate</span>
+            <strong>{week.rate}%</strong>
+          </div>
+          <div className="stat-card">
+            <span className="stat-label">Avg rate (recent)</span>
+            <strong>{analytics.averageRate}%</strong>
+          </div>
+          <div className="stat-card">
+            <span className="stat-label">Submissions</span>
+            <strong>
+              {week.submittedGroups}/{week.totalGroups}
+            </strong>
+          </div>
+        </div>
+
+        <main>
+          <section className="group">
+            <div className="group-head static">
+              <h2>By leader this week</h2>
+            </div>
+            <div className="group-body">
+              {analytics.byGroup.map((row) => (
+                <div className="analytics-row" key={row.group}>
+                  <div className="analytics-row-main">
+                    <button
+                      type="button"
+                      className="linkish"
+                      onClick={() => openLeader(row.group)}
+                    >
+                      {row.label}
+                    </button>
+                    <span className="muted">
+                      {row.members} members · {row.present} present · {row.absent}{" "}
+                      absent
+                      {row.submitted ? " · submitted" : ""}
+                      {row.photos ? ` · ${row.photos} photos` : ""}
+                    </span>
+                  </div>
+                  <div className="rate-bar" aria-label={`${row.rate}%`}>
+                    <span style={{ width: `${row.rate}%` }} />
+                    <em>{row.rate}%</em>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="group">
+            <div className="group-head static">
+              <h2>Recent weeks</h2>
+            </div>
+            <div className="group-body">
+              {analytics.recentWeeks.map((weekRow) => (
+                <div className="analytics-row" key={weekRow.date}>
+                  <div className="analytics-row-main">
+                    <strong>{weekRow.date}</strong>
+                    <span className="muted">
+                      {weekRow.present} present · {weekRow.absent} absent ·{" "}
+                      {weekRow.unmarked} unmarked · {weekRow.submittedGroups}/
+                      {weekRow.totalGroups} submitted
+                    </span>
+                  </div>
+                  <div className="rate-bar">
+                    <span style={{ width: `${weekRow.rate}%` }} />
+                    <em>{weekRow.rate}%</em>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </main>
       </div>
     );
   }
@@ -319,6 +501,16 @@ export function AttendanceLedger() {
           </div>
         </header>
 
+        <div className="total-banner">
+          <div>
+            <span className="total-label">Total members</span>
+            <strong className="total-number">{totalMembers}</strong>
+          </div>
+          <div className="total-meta">
+            {Object.keys(roster).length} leaders · week of {currentDate}
+          </div>
+        </div>
+
         <div className="hero-copy">
           <h2>Who is submitting this week?</h2>
           <p>
@@ -327,32 +519,10 @@ export function AttendanceLedger() {
           </p>
         </div>
 
-        <main className="leader-grid">
-          {Object.entries(roster).map(([group, people]) => {
-            const key = submissionKey(group, currentDate);
-            const submitted = Boolean(submissions[key]?.submittedAt);
-            const photoCount = submissions[key]?.images.length || 0;
-            return (
-              <button
-                key={group}
-                type="button"
-                className={`leader-card${submitted ? " submitted" : ""}`}
-                onClick={() => openLeader(group)}
-              >
-                <span className="leader-name">{leaderLabel(group)}</span>
-                <span className="leader-meta">
-                  {people.length} people
-                  {photoCount > 0 ? ` · ${photoCount} photo${photoCount === 1 ? "" : "s"}` : ""}
-                </span>
-                <span className={`leader-status${submitted ? " on" : ""}`}>
-                  {submitted ? "Submitted" : "Tap to submit"}
-                </span>
-              </button>
-            );
-          })}
-        </main>
-
         <div className="actions">
+          <button type="button" onClick={() => setView("dashboard")}>
+            Analytics dashboard
+          </button>
           <button
             type="button"
             className="secondary"
@@ -361,9 +531,68 @@ export function AttendanceLedger() {
             View all groups
           </button>
         </div>
-        <div className="status-msg">
-          Leaders can bookmark their personal link, e.g. ?leader=aliye
+        <div className="status-msg" aria-live="polite">
+          {statusMsg || "Leaders can bookmark their personal link, e.g. ?leader=aliye"}
         </div>
+
+        <main className="leader-grid">
+          {Object.entries(roster).map(([group, people]) => {
+            const key = submissionKey(group, currentDate);
+            const submitted = Boolean(submissions[key]?.submittedAt);
+            const photoCount = submissions[key]?.images.length || 0;
+            return (
+              <div
+                key={group}
+                className={`leader-card${submitted ? " submitted" : ""}`}
+              >
+                <button
+                  type="button"
+                  className="leader-card-main"
+                  onClick={() => openLeader(group)}
+                >
+                  <span className="leader-name">{leaderLabel(group)}</span>
+                  <span className="leader-meta">
+                    {people.length} people
+                    {photoCount > 0
+                      ? ` · ${photoCount} photo${photoCount === 1 ? "" : "s"}`
+                      : ""}
+                  </span>
+                  <span className={`leader-status${submitted ? " on" : ""}`}>
+                    {submitted ? "Submitted" : "Tap to submit"}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className="leader-remove"
+                  onClick={() => removeLeader(group)}
+                >
+                  Remove leader
+                </button>
+              </div>
+            );
+          })}
+        </main>
+
+        <section className="manage-panel">
+          <h3>Add a leader</h3>
+          <div className="add-row">
+            <input
+              type="text"
+              placeholder="Leader name…"
+              value={newLeaderName}
+              onChange={(event) => setNewLeaderName(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  addLeader();
+                }
+              }}
+            />
+            <button type="button" onClick={addLeader}>
+              Add leader
+            </button>
+          </div>
+        </section>
       </div>
     );
   }
@@ -398,6 +627,9 @@ export function AttendanceLedger() {
 
         <div className="summary-bar">
           <div>
+            Members: <b>{leaderCounts.total}</b>
+          </div>
+          <div>
             Present: <b>{leaderCounts.present}</b>
           </div>
           <div>
@@ -422,18 +654,25 @@ export function AttendanceLedger() {
           >
             Mark all present
           </button>
+          <button
+            type="button"
+            className="secondary danger"
+            onClick={() => removeLeader(activeGroup)}
+          >
+            Remove leader
+          </button>
         </div>
         <div className="status-msg" aria-live="polite">
           {statusMsg ||
             (submittedAt
               ? `Last submitted ${new Date(submittedAt).toLocaleString()}`
-              : "Mark attendance, add photos, then submit.")}
+              : "Mark attendance, manage members, add photos, then submit.")}
         </div>
 
         <main>
           <section className="group">
             <div className="group-head static">
-              <h2>Attendance</h2>
+              <h2>Members & attendance</h2>
               <span className="group-count">{activePeople.length}</span>
             </div>
             <div className="group-body">
@@ -443,29 +682,38 @@ export function AttendanceLedger() {
                 return (
                   <div className="person-row" key={key}>
                     <span className="person-name">{name}</span>
-                    <span className="toggle-group">
+                    <div className="person-actions">
+                      <span className="toggle-group">
+                        <button
+                          type="button"
+                          className={`toggle-btn present${current === "present" ? " active" : ""}`}
+                          onClick={() => setStatus(activeGroup, name, "present")}
+                        >
+                          Present
+                        </button>
+                        <button
+                          type="button"
+                          className={`toggle-btn absent${current === "absent" ? " active" : ""}`}
+                          onClick={() => setStatus(activeGroup, name, "absent")}
+                        >
+                          Absent
+                        </button>
+                      </span>
                       <button
                         type="button"
-                        className={`toggle-btn present${current === "present" ? " active" : ""}`}
-                        onClick={() => setStatus(activeGroup, name, "present")}
+                        className="remove-btn"
+                        onClick={() => removePerson(activeGroup, name)}
                       >
-                        Present
+                        Remove
                       </button>
-                      <button
-                        type="button"
-                        className={`toggle-btn absent${current === "absent" ? " active" : ""}`}
-                        onClick={() => setStatus(activeGroup, name, "absent")}
-                      >
-                        Absent
-                      </button>
-                    </span>
+                    </div>
                   </div>
                 );
               })}
               <div className="add-row">
                 <input
                   type="text"
-                  placeholder="Add a name…"
+                  placeholder="Add a member…"
                   value={draftNames[activeGroup] || ""}
                   onChange={(event) =>
                     setDraftNames((prev) => ({
@@ -481,7 +729,7 @@ export function AttendanceLedger() {
                   }}
                 />
                 <button type="button" onClick={() => addPerson(activeGroup)}>
-                  Add
+                  Add member
                 </button>
               </div>
             </div>
@@ -503,7 +751,9 @@ export function AttendanceLedger() {
                 <button
                   type="button"
                   className="secondary"
-                  disabled={uploading || images.length >= MAX_IMAGES_PER_SUBMISSION}
+                  disabled={
+                    uploading || images.length >= MAX_IMAGES_PER_SUBMISSION
+                  }
                   onClick={() => cameraRef.current?.click()}
                 >
                   Take photo
@@ -511,7 +761,9 @@ export function AttendanceLedger() {
                 <button
                   type="button"
                   className="secondary"
-                  disabled={uploading || images.length >= MAX_IMAGES_PER_SUBMISSION}
+                  disabled={
+                    uploading || images.length >= MAX_IMAGES_PER_SUBMISSION
+                  }
                   onClick={() => fileRef.current?.click()}
                 >
                   Upload images
@@ -580,7 +832,6 @@ export function AttendanceLedger() {
     );
   }
 
-  // Overview of all groups
   return (
     <div className="attendance-app">
       <header>
@@ -605,6 +856,13 @@ export function AttendanceLedger() {
         </div>
       </header>
 
+      <div className="total-banner compact">
+        <div>
+          <span className="total-label">Total members</span>
+          <strong className="total-number">{totalMembers}</strong>
+        </div>
+      </div>
+
       <main>
         {Object.entries(roster).map(([group, people]) => {
           const counts = countGroup(dayState, group, people);
@@ -624,7 +882,8 @@ export function AttendanceLedger() {
                   ) : null}
                 </h2>
                 <span className="group-count">
-                  {counts.present}/{counts.total} · {sub?.images.length || 0} photos
+                  {counts.present}/{counts.total} · {sub?.images.length || 0}{" "}
+                  photos
                 </span>
               </button>
               {sub?.images?.length ? (
