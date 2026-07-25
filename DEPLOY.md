@@ -2,11 +2,11 @@
 
 ## Attendance Ledger — live URL
 
-**Current live site:** https://lucid-flow-513iaci.shipstatic.com
+**Current live site:** https://angled-nebula-o0kpo23.shipstatic.com
 
 ShipStatic free deploys expire after ~3 days unless claimed. To keep this URL permanently, open the claim link while signed in at shipstatic.com:
 
-https://my.shipstatic.com/claim/34b16ca70588434254a55429a6cfe0a30908ac5155354349e704bf84a1d3e2ed
+https://my.shipstatic.com/claim/b7cb4891478bda7d08b8665c634a02a401a36be1b4ef832a0dd02de2011a1f0f
 
 ### Permanent option: GitHub Pages
 
