@@ -2,11 +2,11 @@
 
 ## Attendance Ledger — live URL
 
-**Current live site:** https://phantom-dust-o6416mq.shipstatic.com
+**Current live site:** https://hypnotic-mote-ufk44ej.shipstatic.com
 
 ShipStatic free deploys expire after ~3 days unless claimed. To keep this URL permanently, open the claim link while signed in at shipstatic.com:
 
-https://my.shipstatic.com/claim/9fab83e9ee57caa4d5e6443a761b8b77ce600a79fea4d714ea99336cf5bd6ff0
+https://my.shipstatic.com/claim/5d8866039f24a39d624bca72baf5865b7b4a8cb28018c73a12cacef3288559bb
 
 ### Permanent option: GitHub Pages
 

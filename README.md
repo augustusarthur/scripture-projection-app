@@ -13,7 +13,7 @@ Track Sunday / small-group attendance by date:
 
 Open the app at [`/attendance`](./src/app/attendance) locally, or the live site:
 
-**https://phantom-dust-o6416mq.shipstatic.com**
+**https://hypnotic-mote-ufk44ej.shipstatic.com**
 
 (Claim it to keep permanently — see [DEPLOY.md](./DEPLOY.md).)
 
