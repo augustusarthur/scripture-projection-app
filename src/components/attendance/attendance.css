@@ -426,6 +426,26 @@
   font-size: 12.5px !important;
 }
 
+.attendance-app .icu-section .group-head.static {
+  background: #f0d9d4;
+}
+
+.attendance-app .icu-btn {
+  border: 1px solid #e2b4aa;
+  background: #fff7f5;
+  color: var(--absent);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.attendance-app .icu-btn.restore {
+  border-color: var(--forest);
+  background: #eef5f0;
+  color: var(--forest-deep);
+}
+
 .attendance-app .sr-only {
   position: absolute;
   width: 1px;

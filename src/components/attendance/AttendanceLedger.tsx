@@ -27,9 +27,11 @@ import {
   loadCloudSync,
   memberNames,
   moveMemberInRoster,
+  moveMemberToIcu,
   normalizeRoster,
   personKey,
   remapsAttendanceForMove,
+  restoreMemberFromIcu,
   saveCloudSync,
   submissionKey,
   todayISODate,
@@ -227,6 +229,9 @@ export function AttendanceLedger() {
   const activeMembers: Member[] = activeGroup
     ? activeRoster[activeGroup]?.members || []
     : [];
+  const icuMembers: Member[] = activeGroup
+    ? activeRoster[activeGroup]?.icu || []
+    : [];
   const activePeople = activeMembers.map((member) => member.name);
   const activeKey =
     activeGroup && currentDate ? submissionKey(activeGroup, currentDate) : null;
@@ -384,7 +389,7 @@ export function AttendanceLedger() {
       if (!prev) return prev;
       return {
         ...prev,
-        [group]: { phone: newLeaderPhone.trim(), members: [] },
+        [group]: { phone: newLeaderPhone.trim(), members: [], icu: [] },
       };
     });
     setNewLeaderName("");
@@ -501,6 +506,59 @@ export function AttendanceLedger() {
       return copy;
     });
     flash(`Moved ${name} — tap Save to sync`);
+  }
+
+  async function applyRosterChange(
+    next: Roster,
+    successMessage: string,
+    pendingEditMessage: string,
+  ) {
+    if (editing) {
+      setDraftRoster(next);
+      flash(pendingEditMessage);
+      return;
+    }
+    setRoster(next);
+    try {
+      const savedId = await saveCloudSync(syncId, {
+        roster: next,
+        attendance: state,
+        submissions,
+      });
+      setSyncId(savedId);
+      setSyncInUrl(savedId);
+      flash(successMessage);
+    } catch {
+      flash(`${successMessage} (saved on this phone — Sync failed)`);
+    }
+  }
+
+  async function sendToIcu(group: string, name: string) {
+    const source = editing && draftRoster ? draftRoster : roster;
+    const next = moveMemberToIcu(source, group, name);
+    if (!next) {
+      flash("Could not move to ICU");
+      return;
+    }
+    await applyRosterChange(
+      next,
+      `${name} moved to ICU`,
+      `${name} moved to ICU — tap Save to sync`,
+    );
+  }
+
+  async function restoreFromIcu(group: string, name: string) {
+    const source = editing && draftRoster ? draftRoster : roster;
+    const next = restoreMemberFromIcu(source, group, name);
+    if (!next) {
+      flash("Could not restore from ICU");
+      return;
+    }
+    await applyRosterChange(
+      next,
+      `${name} restored to active list`,
+      `${name} restored — tap Save to sync`,
+    );
   }
 
   function setMemberPhone(group: string, name: string, phone: string) {
@@ -1097,6 +1155,13 @@ export function AttendanceLedger() {
                           Absent
                         </button>
                       </span>
+                      <button
+                        type="button"
+                        className="icu-btn"
+                        onClick={() => sendToIcu(activeGroup, member.name)}
+                      >
+                        To ICU
+                      </button>
                       {editing ? (
                         <>
                           <label className="move-control">
@@ -1201,6 +1266,42 @@ export function AttendanceLedger() {
                   </button>
                 </div>
               ) : null}
+            </div>
+          </section>
+
+          <section className="group icu-section">
+            <div className="group-head static">
+              <h2>ICU</h2>
+              <span className="group-count">{icuMembers.length}</span>
+            </div>
+            <div className="group-body">
+              <p className="photo-hint">
+                Move members here when they have been absent for a while. This is
+                a manual leader action.
+              </p>
+              {icuMembers.length === 0 ? (
+                <p className="photo-empty">No one in ICU right now.</p>
+              ) : (
+                icuMembers.map((member) => (
+                  <div className="person-row" key={`icu-${member.name}`}>
+                    <div className="person-main">
+                      <span className="person-name">{member.name}</span>
+                      {member.phone ? (
+                        <span className="person-phone">☎ {member.phone}</span>
+                      ) : null}
+                    </div>
+                    <div className="person-actions">
+                      <button
+                        type="button"
+                        className="icu-btn restore"
+                        onClick={() => restoreFromIcu(activeGroup, member.name)}
+                      >
+                        Restore
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </section>
 

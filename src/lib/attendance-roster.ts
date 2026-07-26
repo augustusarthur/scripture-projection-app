@@ -12,6 +12,8 @@ export type Member = {
 export type GroupRecord = {
   phone: string;
   members: Member[];
+  /** Members set aside for follow-up after repeated absence */
+  icu: Member[];
 };
 
 export type Roster = Record<string, GroupRecord>;
@@ -46,90 +48,81 @@ function membersFromNames(names: string[]): Member[] {
   return names.map((name) => ({ name, phone: "" }));
 }
 
+function groupFromNames(names: string[]): GroupRecord {
+  return { phone: "", members: membersFromNames(names), icu: [] };
+}
+
 export const DEFAULT_ROSTER: Roster = {
-  "Aliye's Group": {
-    phone: "",
-    members: membersFromNames([
-      "Anthony",
-      "Heba",
-      "Jeremy",
-      "Jordan",
-      "Josiah",
-      "Odera",
-      "Patrick",
-      "Tessa",
-      "Kokou",
-      "Kriti",
-      "Adrianna",
-      "Judith",
-    ]),
-  },
-  "Augustus's Group": {
-    phone: "",
-    members: membersFromNames([
-      "Dieumerci",
-      "Ashlee",
-      "Brian",
-      "Furri",
-      "Pastor Glodie",
-      "Pressley",
-      "Terrence",
-      "Israel",
-      "Gerald",
-      "Uyi",
-      "Aliye",
-      "Chancela",
-      "Chidi",
-      "Diana",
-      "Ephraim",
-      "Jeff",
-      "Korey",
-      "Mama Vivian",
-      "Nancy",
-      "Shalyne",
-    ]),
-  },
-  "Diana's Group": {
-    phone: "",
-    members: membersFromNames([
-      "Caleb",
-      "Dawit",
-      "Ian",
-      "Kameron",
-      "Lady Nikki",
-      "Rehema",
-    ]),
-  },
-  "Naa's Group": {
-    phone: "",
-    members: membersFromNames([
-      "Chiche",
-      "Kriti",
-      "Mac Noble",
-      "Mya",
-      "Tarmadji",
-      "Theresa",
-      "Treasure",
-    ]),
-  },
-  "Shalyne's Group": {
-    phone: "",
-    members: membersFromNames([
-      "Eden M",
-      "Morris",
-      "Talent",
-      "Trishana",
-      "Vanessa",
-      "Dennis",
-      "Brian",
-      "Douglas",
-      "Maru",
-    ]),
-  },
-  "Needs a Group": {
-    phone: "",
-    members: membersFromNames(["Lucky", "Atrel/Joseph", "Dezhon", "Johan"]),
-  },
+  "Aliye's Group": groupFromNames([
+    "Anthony",
+    "Heba",
+    "Jeremy",
+    "Jordan",
+    "Josiah",
+    "Odera",
+    "Patrick",
+    "Tessa",
+    "Kokou",
+    "Kriti",
+    "Adrianna",
+    "Judith",
+  ]),
+  "Augustus's Group": groupFromNames([
+    "Dieumerci",
+    "Ashlee",
+    "Brian",
+    "Furri",
+    "Pastor Glodie",
+    "Pressley",
+    "Terrence",
+    "Israel",
+    "Gerald",
+    "Uyi",
+    "Aliye",
+    "Chancela",
+    "Chidi",
+    "Diana",
+    "Ephraim",
+    "Jeff",
+    "Korey",
+    "Mama Vivian",
+    "Nancy",
+    "Shalyne",
+  ]),
+  "Diana's Group": groupFromNames([
+    "Caleb",
+    "Dawit",
+    "Ian",
+    "Kameron",
+    "Lady Nikki",
+    "Rehema",
+  ]),
+  "Naa's Group": groupFromNames([
+    "Chiche",
+    "Kriti",
+    "Mac Noble",
+    "Mya",
+    "Tarmadji",
+    "Theresa",
+    "Treasure",
+  ]),
+  "Shalyne's Group": groupFromNames([
+    "Eden M",
+    "Morris",
+    "Talent",
+    "Trishana",
+    "Vanessa",
+    "Dennis",
+    "Brian",
+    "Douglas",
+    "Maru",
+  ]),
+  "Needs a Group": groupFromNames([
+    "Lucky",
+    "Atrel/Joseph",
+    "Dezhon",
+    "Johan",
+  ]),
 };
 
 export const ATTENDANCE_STORAGE_KEY = "church-attendance-state-v2";
@@ -165,9 +158,36 @@ export function memberNames(group: GroupRecord | undefined) {
 
 export function countRoster(roster: Roster) {
   return Object.values(roster).reduce(
+    (sum, group) =>
+      sum + (group.members?.length || 0) + (group.icu?.length || 0),
+    0,
+  );
+}
+
+export function countActiveMembers(roster: Roster) {
+  return Object.values(roster).reduce(
     (sum, group) => sum + (group.members?.length || 0),
     0,
   );
+}
+
+function parseMembers(raw: unknown): Member[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((item) => {
+      if (typeof item === "string") return { name: item, phone: "" };
+      if (item && typeof item === "object") {
+        const member = item as { name?: unknown; phone?: unknown };
+        if (typeof member.name === "string" && member.name.trim()) {
+          return {
+            name: member.name.trim(),
+            phone: typeof member.phone === "string" ? member.phone : "",
+          };
+        }
+      }
+      return null;
+    })
+    .filter((item): item is Member => Boolean(item));
 }
 
 export function formatGroupName(leaderName: string) {
@@ -185,32 +205,21 @@ export function normalizeRoster(raw: unknown): Roster {
     if (Array.isArray(value)) {
       next[group] = {
         phone: "",
-        members: value
-          .filter((item): item is string => typeof item === "string")
-          .map((name) => ({ name, phone: "" })),
+        members: parseMembers(value),
+        icu: [],
       };
       continue;
     }
     if (value && typeof value === "object") {
-      const record = value as { phone?: unknown; members?: unknown };
-      const membersRaw = Array.isArray(record.members) ? record.members : [];
+      const record = value as {
+        phone?: unknown;
+        members?: unknown;
+        icu?: unknown;
+      };
       next[group] = {
         phone: typeof record.phone === "string" ? record.phone : "",
-        members: membersRaw
-          .map((item) => {
-            if (typeof item === "string") return { name: item, phone: "" };
-            if (item && typeof item === "object") {
-              const member = item as { name?: unknown; phone?: unknown };
-              if (typeof member.name === "string" && member.name.trim()) {
-                return {
-                  name: member.name.trim(),
-                  phone: typeof member.phone === "string" ? member.phone : "",
-                };
-              }
-            }
-            return null;
-          })
-          .filter((item): item is Member => Boolean(item)),
+        members: parseMembers(record.members),
+        icu: parseMembers(record.icu),
       };
     }
   }
@@ -293,7 +302,15 @@ export function findGroupBySlug(roster: Roster, slug: string) {
   return Object.keys(roster).find((group) => leaderSlug(group) === normalized);
 }
 
-/** Move a member between groups. Returns null if the move is invalid. */
+function findMemberInGroup(group: GroupRecord, memberName: string) {
+  const inActive = group.members.find((item) => item.name === memberName);
+  if (inActive) return { member: inActive, from: "members" as const };
+  const inIcu = (group.icu || []).find((item) => item.name === memberName);
+  if (inIcu) return { member: inIcu, from: "icu" as const };
+  return null;
+}
+
+/** Move a member between groups (active list). Returns null if invalid. */
 export function moveMemberInRoster(
   roster: Roster,
   fromGroup: string,
@@ -304,10 +321,13 @@ export function moveMemberInRoster(
   const from = roster[fromGroup];
   const to = roster[toGroup];
   if (!from || !to) return null;
-  const member = from.members.find((item) => item.name === memberName);
-  if (!member) return null;
+  const found = findMemberInGroup(from, memberName);
+  if (!found) return null;
   if (
     to.members.some(
+      (item) => item.name.toLowerCase() === memberName.toLowerCase(),
+    ) ||
+    (to.icu || []).some(
       (item) => item.name.toLowerCase() === memberName.toLowerCase(),
     )
   ) {
@@ -317,11 +337,73 @@ export function moveMemberInRoster(
     ...roster,
     [fromGroup]: {
       ...from,
-      members: from.members.filter((item) => item.name !== memberName),
+      members:
+        found.from === "members"
+          ? from.members.filter((item) => item.name !== memberName)
+          : from.members,
+      icu:
+        found.from === "icu"
+          ? (from.icu || []).filter((item) => item.name !== memberName)
+          : from.icu || [],
     },
     [toGroup]: {
       ...to,
-      members: [...to.members, { ...member }],
+      members: [...to.members, { ...found.member }],
+      icu: to.icu || [],
+    },
+  };
+}
+
+/** Leader action: move an active member into this group's ICU section. */
+export function moveMemberToIcu(
+  roster: Roster,
+  groupName: string,
+  memberName: string,
+): Roster | null {
+  const group = roster[groupName];
+  if (!group) return null;
+  const member = group.members.find((item) => item.name === memberName);
+  if (!member) return null;
+  if (
+    (group.icu || []).some(
+      (item) => item.name.toLowerCase() === memberName.toLowerCase(),
+    )
+  ) {
+    return null;
+  }
+  return {
+    ...roster,
+    [groupName]: {
+      ...group,
+      members: group.members.filter((item) => item.name !== memberName),
+      icu: [...(group.icu || []), { ...member }],
+    },
+  };
+}
+
+/** Leader action: restore a member from ICU back to the active list. */
+export function restoreMemberFromIcu(
+  roster: Roster,
+  groupName: string,
+  memberName: string,
+): Roster | null {
+  const group = roster[groupName];
+  if (!group) return null;
+  const member = (group.icu || []).find((item) => item.name === memberName);
+  if (!member) return null;
+  if (
+    group.members.some(
+      (item) => item.name.toLowerCase() === memberName.toLowerCase(),
+    )
+  ) {
+    return null;
+  }
+  return {
+    ...roster,
+    [groupName]: {
+      ...group,
+      icu: (group.icu || []).filter((item) => item.name !== memberName),
+      members: [...group.members, { ...member }],
     },
   };
 }

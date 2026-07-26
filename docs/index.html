@@ -60,6 +60,9 @@ main{margin-top:18px;padding-bottom:24px}
 .move-control{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .move-control select{border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:12.5px;background:#fff;color:var(--ink);max-width:160px}
 .move-btn{background:#fff!important;color:var(--forest-deep)!important;border:1px solid var(--line)!important;padding:6px 10px!important;font-size:12.5px!important}
+.icu-section .group-head.static{background:#f0d9d4}
+.icu-btn{border:1px solid #e2b4aa;background:#fff7f5;color:var(--absent);border-radius:6px;padding:6px 10px;font-size:12.5px;cursor:pointer}
+.icu-btn.restore{border-color:var(--forest);background:#eef5f0;color:var(--forest-deep)}
 .add-row{display:flex;gap:8px;padding:10px;border-top:1px solid #f0ede1;flex-wrap:wrap}
 .notes-input{width:100%;min-height:84px;resize:vertical}
 .photo-body{padding:14px}.photo-hint,.photo-empty,.notes-preview{margin:0 0 12px;color:var(--muted);font-size:13.5px}
@@ -93,12 +96,12 @@ main{margin-top:18px;padding-bottom:24px}
 const DEFAULT_SYNC_ID = "019f9be4-bfa4-730d-b396-bdeafbd8cb4a";
 const SYNC_API = "https://jsonblob.com/api/jsonBlob";
 const DEFAULT_ROSTER = {
-  "Aliye's Group": {phone:"", members:["Anthony","Heba","Jeremy","Jordan","Josiah","Odera","Patrick","Tessa","Kokou","Kriti","Adrianna","Judith"].map(n=>({name:n,phone:""}))},
-  "Augustus's Group": {phone:"", members:["Dieumerci","Ashlee","Brian","Furri","Pastor Glodie","Pressley","Terrence","Israel","Gerald","Uyi","Aliye","Chancela","Chidi","Diana","Ephraim","Jeff","Korey","Mama Vivian","Nancy","Shalyne"].map(n=>({name:n,phone:""}))},
-  "Diana's Group": {phone:"", members:["Caleb","Dawit","Ian","Kameron","Lady Nikki","Rehema"].map(n=>({name:n,phone:""}))},
-  "Naa's Group": {phone:"", members:["Chiche","Kriti","Mac Noble","Mya","Tarmadji","Theresa","Treasure"].map(n=>({name:n,phone:""}))},
-  "Shalyne's Group": {phone:"", members:["Eden M","Morris","Talent","Trishana","Vanessa","Dennis","Brian","Douglas","Maru"].map(n=>({name:n,phone:""}))},
-  "Needs a Group": {phone:"", members:["Lucky","Atrel/Joseph","Dezhon","Johan"].map(n=>({name:n,phone:""}))}
+  "Aliye's Group": {phone:"", icu:[], members:["Anthony","Heba","Jeremy","Jordan","Josiah","Odera","Patrick","Tessa","Kokou","Kriti","Adrianna","Judith"].map(n=>({name:n,phone:""}))},
+  "Augustus's Group": {phone:"", icu:[], members:["Dieumerci","Ashlee","Brian","Furri","Pastor Glodie","Pressley","Terrence","Israel","Gerald","Uyi","Aliye","Chancela","Chidi","Diana","Ephraim","Jeff","Korey","Mama Vivian","Nancy","Shalyne"].map(n=>({name:n,phone:""}))},
+  "Diana's Group": {phone:"", icu:[], members:["Caleb","Dawit","Ian","Kameron","Lady Nikki","Rehema"].map(n=>({name:n,phone:""}))},
+  "Naa's Group": {phone:"", icu:[], members:["Chiche","Kriti","Mac Noble","Mya","Tarmadji","Theresa","Treasure"].map(n=>({name:n,phone:""}))},
+  "Shalyne's Group": {phone:"", icu:[], members:["Eden M","Morris","Talent","Trishana","Vanessa","Dennis","Brian","Douglas","Maru"].map(n=>({name:n,phone:""}))},
+  "Needs a Group": {phone:"", icu:[], members:["Lucky","Atrel/Joseph","Dezhon","Johan"].map(n=>({name:n,phone:""}))}
 };
 const MAX_IMAGES=8;
 let roster=structuredClone(DEFAULT_ROSTER);
@@ -122,17 +125,17 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 function flash(m){statusMsg=m; render(); clearTimeout(statusTimer); statusTimer=setTimeout(()=>{statusMsg=""; render()},2800)}
 function dayState(){return state[currentDate]||{}}
 function getSub(g,d){return submissions[submissionKey(g,d)]||null}
-function countRoster(r){return Object.values(r).reduce((s,g)=>s+(g.members||[]).length,0)}
+function countRoster(r){return Object.values(r).reduce((s,g)=>s+(g.members||[]).length+(g.icu||[]).length,0)}
 function countGroup(g){const people=(activeRoster()[g]?.members)||[]; const day=dayState(); let present=0,absent=0; people.forEach(m=>{const v=day[personKey(g,m.name)]; if(v==="present")present++; if(v==="absent")absent++}); return {present,absent,unmarked:Math.max(people.length-present-absent,0),total:people.length}}
 function groupAttendance(g){const out={}, day=dayState(); ((activeRoster()[g]?.members)||[]).forEach(m=>{const k=personKey(g,m.name); if(day[k])out[k]=day[k]}); return out}
 function normalizeRoster(raw){
   if(!raw||typeof raw!=="object") return structuredClone(DEFAULT_ROSTER);
   const next={};
   Object.entries(raw).forEach(([g,v])=>{
-    if(Array.isArray(v)) next[g]={phone:"", members:v.filter(x=>typeof x==="string").map(n=>({name:n,phone:""}))};
+    if(Array.isArray(v)) next[g]={phone:"", icu:[], members:v.filter(x=>typeof x==="string").map(n=>({name:n,phone:""}))};
     else if(v&&typeof v==="object"){
       const members=Array.isArray(v.members)?v.members:[];
-      next[g]={phone:typeof v.phone==="string"?v.phone:"", members:members.map(item=>{
+      const icu=Array.isArray(v.icu)?v.icu:[]; next[g]={phone:typeof v.phone==="string"?v.phone:"", icu:icu.map(item=>{if(typeof item==="string") return {name:item,phone:""}; if(item&&typeof item==="object"&&typeof item.name==="string") return {name:item.name, phone:typeof item.phone==="string"?item.phone:""}; return null;}).filter(Boolean), members:members.map(item=>{
         if(typeof item==="string") return {name:item,phone:""};
         if(item&&typeof item==="object"&&typeof item.name==="string") return {name:item.name, phone:typeof item.phone==="string"?item.phone:""};
         return null;
@@ -237,7 +240,7 @@ function addLeader(){
   if(!editing||!draftRoster) return flash("Turn on Edit mode first");
   const group=formatGroupName(newLeaderName); if(!group) return flash("Enter a leader name");
   if(draftRoster[group]||Object.keys(draftRoster).some(g=>g.toLowerCase()===group.toLowerCase())) return flash("That leader already exists");
-  draftRoster[group]={phone:(newLeaderPhone||"").trim(), members:[]};
+  draftRoster[group]={phone:(newLeaderPhone||"").trim(), members:[], icu:[]};
   newLeaderName=""; newLeaderPhone=""; flash("Leader added — tap Save to sync"); render();
 }
 function removeLeader(g){
@@ -283,6 +286,32 @@ function movePerson(fromGroup,name,toGroup){
     delete day[fromKey];
   });
   flash("Moved "+name+" — tap Save to sync"); render();
+}
+
+async function applyRosterChange(next, okMsg, editMsg){
+  if(editing){ draftRoster=next; flash(editMsg); render(); return; }
+  roster=next; persistLocal();
+  try{
+    syncId=await saveCloud(syncId,{version:2,roster,attendance:state,submissions,updatedAt:new Date().toISOString()});
+    lastSyncedAt=new Date().toISOString(); setSyncInUrl(syncId); persistLocal(); flash(okMsg);
+  }catch{ flash(okMsg+" (saved on this phone — Sync failed)"); }
+  render();
+}
+async function sendToIcu(g,name){
+  const src=activeRoster(); const group=src[g]; if(!group) return flash("Could not move to ICU");
+  const member=(group.members||[]).find(m=>m.name===name); if(!member) return flash("Member not found");
+  if((group.icu||[]).some(m=>m.name.toLowerCase()===name.toLowerCase())) return flash("Already in ICU");
+  const next=structuredClone(src);
+  next[g]={...group, members:(group.members||[]).filter(m=>m.name!==name), icu:[...(group.icu||[]), {...member}]};
+  await applyRosterChange(next, name+" moved to ICU", name+" moved to ICU — tap Save to sync");
+}
+async function restoreFromIcu(g,name){
+  const src=activeRoster(); const group=src[g]; if(!group) return flash("Could not restore");
+  const member=(group.icu||[]).find(m=>m.name===name); if(!member) return flash("Not in ICU");
+  if((group.members||[]).some(m=>m.name.toLowerCase()===name.toLowerCase())) return flash("Already active");
+  const next=structuredClone(src);
+  next[g]={...group, icu:(group.icu||[]).filter(m=>m.name!==name), members:[...(group.members||[]), {...member}]};
+  await applyRosterChange(next, name+" restored to active list", name+" restored — tap Save to sync");
 }
 function setMemberPhone(g,name,phone){
   if(!editing||!draftRoster) return;
@@ -356,7 +385,7 @@ function renderHome(){
       <button type="button" class="leader-card-main" data-open="${esc(group)}">
         <span class="leader-name">${esc(leaderLabel(group))}</span>
         ${phone}
-        <span class="leader-meta">${(rec.members||[]).length} people${photos?` · ${photos} photo${photos===1?"":"s"}`:""}</span>
+        <span class="leader-meta">${(rec.members||[]).length} active${(rec.icu&&rec.icu.length)?` · ${rec.icu.length} ICU`:""}${photos?` · ${photos} photo${photos===1?"":"s"}`:""}</span>
         <span class="leader-status${submitted?" on":""}">${submitted?"Submitted":"Tap to submit"}</span>
       </button>
       ${editing?`<button type="button" class="leader-remove" data-remove-leader="${esc(group)}">Remove leader</button>`:""}
@@ -410,6 +439,7 @@ function renderLeader(){
           <button type="button" class="toggle-btn present${current==="present"?" active":""}" data-name="${esc(m.name)}" data-val="present">Present</button>
           <button type="button" class="toggle-btn absent${current==="absent"?" active":""}" data-name="${esc(m.name)}" data-val="absent">Absent</button>
         </span>
+        <button type="button" class="icu-btn" data-to-icu="${esc(m.name)}">To ICU</button>
         ${editing?`<label class="move-control">
           <select data-move-select="${esc(m.name)}"><option value="">Move to…</option>${moveOptions}</select>
           <button type="button" class="move-btn" data-move-member="${esc(m.name)}">Move</button>
@@ -448,6 +478,10 @@ function renderLeader(){
             <button type="button" id="addName">Add member</button>
           </div>`:""}
         </div></section>
+      <section class="group icu-section"><div class="group-head static"><h2>ICU</h2><span class="group-count">${((r[activeGroup]&&r[activeGroup].icu)||[]).length}</span></div>
+        <div class="group-body"><p class="photo-hint">Move members here when they have been absent for a while. This is a manual leader action.</p>
+          ${(((r[activeGroup]&&r[activeGroup].icu)||[]).length)?((r[activeGroup].icu||[]).map(m=>`<div class="person-row"><div class="person-main"><span class="person-name">${esc(m.name)}</span>${m.phone?`<span class="person-phone">☎ ${esc(m.phone)}</span>`:""}</div><div class="person-actions"><button type="button" class="icu-btn restore" data-restore-icu="${esc(m.name)}">Restore</button></div></div>`).join("")):`<p class="photo-empty">No one in ICU right now.</p>`}
+        </div></section>
       <section class="group"><div class="group-head static"><h2>Weekly photos</h2><span class="group-count">${images.length}/${MAX_IMAGES}</span></div>
         <div class="group-body photo-body">
           <p class="photo-hint">Add pictures from this week’s gathering (up to ${MAX_IMAGES}).</p>
@@ -478,6 +512,8 @@ function renderLeader(){
   app.querySelectorAll(".toggle-btn").forEach(b=>b.onclick=()=>setStatus(activeGroup,b.dataset.name,b.dataset.val));
   app.querySelectorAll("[data-remove]").forEach(b=>b.onclick=()=>removeImage(b.getAttribute("data-remove")));
   app.querySelectorAll("[data-remove-member]").forEach(b=>b.onclick=()=>removePerson(activeGroup,b.getAttribute("data-remove-member")));
+  app.querySelectorAll("[data-to-icu]").forEach(b=>b.onclick=()=>sendToIcu(activeGroup,b.getAttribute("data-to-icu")));
+  app.querySelectorAll("[data-restore-icu]").forEach(b=>b.onclick=()=>restoreFromIcu(activeGroup,b.getAttribute("data-restore-icu")));
   app.querySelectorAll("[data-move-member]").forEach(b=>{
     b.onclick=()=>{
       const name=b.getAttribute("data-move-member");
