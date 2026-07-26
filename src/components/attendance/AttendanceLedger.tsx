@@ -6,11 +6,14 @@ import {
   AttendanceState,
   AttendanceStatus,
   DEFAULT_ROSTER,
+  DEFAULT_SYNC_ID,
   DayAttendance,
   MAX_IMAGES_PER_SUBMISSION,
+  Member,
   ROSTER_STORAGE_KEY,
   Roster,
   SUBMISSIONS_STORAGE_KEY,
+  SYNC_ID_STORAGE_KEY,
   SubmissionsState,
   WeekSubmission,
   buildAnalytics,
@@ -21,13 +24,19 @@ import {
   formatGroupName,
   leaderLabel,
   leaderSlug,
+  loadCloudSync,
+  memberNames,
+  normalizeRoster,
   personKey,
+  saveCloudSync,
   submissionKey,
   todayISODate,
 } from "@/lib/attendance-roster";
 import "./attendance.css";
 
 type View = "home" | "leader" | "overview" | "dashboard";
+
+type DraftMemberFields = Record<string, { name: string; phone: string }>;
 
 function readJson<T>(key: string, fallback: T): T {
   try {
@@ -83,6 +92,20 @@ function purgePersonKeys(
   return next;
 }
 
+function setSyncInUrl(id: string) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("sync", id);
+  window.history.replaceState({}, "", url.toString());
+}
+
+function shareUrl(syncId: string) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("sync", syncId);
+  url.searchParams.delete("leader");
+  url.searchParams.delete("g");
+  return url.toString();
+}
+
 export function AttendanceLedger() {
   const [ready, setReady] = useState(false);
   const [view, setView] = useState<View>("home");
@@ -90,35 +113,91 @@ export function AttendanceLedger() {
   const [currentDate, setCurrentDate] = useState(todayISODate);
   const [state, setState] = useState<AttendanceState>({});
   const [roster, setRoster] = useState<Roster>(DEFAULT_ROSTER);
+  const [draftRoster, setDraftRoster] = useState<Roster | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [syncId, setSyncId] = useState(DEFAULT_SYNC_ID);
+  const [lastSyncedAt, setLastSyncedAt] = useState("");
   const [submissions, setSubmissions] = useState<SubmissionsState>({});
   const [notes, setNotes] = useState("");
-  const [draftNames, setDraftNames] = useState<Record<string, string>>({});
+  const [draftMembers, setDraftMembers] = useState<DraftMemberFields>({});
   const [newLeaderName, setNewLeaderName] = useState("");
+  const [newLeaderPhone, setNewLeaderPhone] = useState("");
   const [statusMsg, setStatusMsg] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
+  const statusTimer = useRef<number | null>(null);
+
+  const activeRoster = editing && draftRoster ? draftRoster : roster;
 
   useEffect(() => {
-    const savedState = readJson<AttendanceState>(ATTENDANCE_STORAGE_KEY, {});
-    const savedRoster = readJson<Roster>(ROSTER_STORAGE_KEY, DEFAULT_ROSTER);
-    const savedSubs = readJson<SubmissionsState>(SUBMISSIONS_STORAGE_KEY, {});
-    setState(savedState);
-    setRoster(savedRoster);
-    setSubmissions(savedSubs);
+    let cancelled = false;
 
-    const params = new URLSearchParams(window.location.search);
-    const leader = params.get("leader") || params.get("g");
-    if (leader) {
-      const group = findGroupBySlug(savedRoster, leader);
-      if (group) {
-        setActiveGroup(group);
-        setView("leader");
-        const key = submissionKey(group, todayISODate());
-        setNotes(savedSubs[key]?.notes || "");
+    async function boot() {
+      const params = new URLSearchParams(window.location.search);
+      let nextSyncId =
+        params.get("sync") ||
+        localStorage.getItem(SYNC_ID_STORAGE_KEY) ||
+        DEFAULT_SYNC_ID;
+      setSyncInUrl(nextSyncId);
+
+      let nextRoster = normalizeRoster(
+        readJson<unknown>(ROSTER_STORAGE_KEY, DEFAULT_ROSTER),
+      );
+      let nextState = readJson<AttendanceState>(ATTENDANCE_STORAGE_KEY, {});
+      let nextSubs = readJson<SubmissionsState>(SUBMISSIONS_STORAGE_KEY, {});
+      let nextSyncedAt = "";
+
+      const cloud = await loadCloudSync(nextSyncId);
+      if (cloud) {
+        nextRoster = cloud.roster;
+        nextState = cloud.attendance;
+        nextSubs = cloud.submissions;
+        nextSyncedAt = cloud.updatedAt || "";
+      } else {
+        try {
+          nextSyncId = await saveCloudSync(nextSyncId, {
+            roster: nextRoster,
+            attendance: nextState,
+            submissions: nextSubs,
+          });
+          nextSyncedAt = new Date().toISOString();
+          setSyncInUrl(nextSyncId);
+        } catch {
+          // Keep local data if cloud seed fails.
+        }
       }
+
+      if (cancelled) return;
+
+      setSyncId(nextSyncId);
+      setRoster(nextRoster);
+      setState(nextState);
+      setSubmissions(nextSubs);
+      setLastSyncedAt(nextSyncedAt);
+      localStorage.setItem(SYNC_ID_STORAGE_KEY, nextSyncId);
+      localStorage.setItem(ROSTER_STORAGE_KEY, JSON.stringify(nextRoster));
+      localStorage.setItem(ATTENDANCE_STORAGE_KEY, JSON.stringify(nextState));
+      localStorage.setItem(SUBMISSIONS_STORAGE_KEY, JSON.stringify(nextSubs));
+
+      const leader = params.get("leader") || params.get("g");
+      if (leader) {
+        const group = findGroupBySlug(nextRoster, leader);
+        if (group) {
+          setActiveGroup(group);
+          setView("leader");
+          const key = submissionKey(group, todayISODate());
+          setNotes(nextSubs[key]?.notes || "");
+        }
+      }
+      setReady(true);
     }
-    setReady(true);
+
+    void boot();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -136,8 +215,16 @@ export function AttendanceLedger() {
     localStorage.setItem(SUBMISSIONS_STORAGE_KEY, JSON.stringify(submissions));
   }, [submissions, ready]);
 
+  useEffect(() => {
+    if (!ready) return;
+    localStorage.setItem(SYNC_ID_STORAGE_KEY, syncId);
+  }, [syncId, ready]);
+
   const dayState = state[currentDate] || {};
-  const activePeople = activeGroup ? roster[activeGroup] || [] : [];
+  const activeMembers: Member[] = activeGroup
+    ? activeRoster[activeGroup]?.members || []
+    : [];
+  const activePeople = activeMembers.map((member) => member.name);
   const activeKey =
     activeGroup && currentDate ? submissionKey(activeGroup, currentDate) : null;
   const activeSubmission =
@@ -151,10 +238,10 @@ export function AttendanceLedger() {
           )
         : null;
 
-  const totalMembers = useMemo(() => countRoster(roster), [roster]);
+  const totalMembers = useMemo(() => countRoster(activeRoster), [activeRoster]);
   const analytics = useMemo(
-    () => buildAnalytics(roster, state, submissions, currentDate),
-    [roster, state, submissions, currentDate],
+    () => buildAnalytics(activeRoster, state, submissions, currentDate),
+    [activeRoster, state, submissions, currentDate],
   );
 
   const leaderCounts = useMemo(() => {
@@ -164,7 +251,72 @@ export function AttendanceLedger() {
 
   function flash(message: string) {
     setStatusMsg(message);
-    window.setTimeout(() => setStatusMsg(""), 2800);
+    if (statusTimer.current) window.clearTimeout(statusTimer.current);
+    statusTimer.current = window.setTimeout(() => setStatusMsg(""), 2800);
+  }
+
+  function persistSyncId(id: string) {
+    setSyncId(id);
+    setSyncInUrl(id);
+    localStorage.setItem(SYNC_ID_STORAGE_KEY, id);
+  }
+
+  async function pushCloud(
+    nextRoster: Roster,
+    nextState: AttendanceState,
+    nextSubs: SubmissionsState,
+  ) {
+    const updatedAt = new Date().toISOString();
+    const id = await saveCloudSync(syncId, {
+      roster: nextRoster,
+      attendance: nextState,
+      submissions: nextSubs,
+      updatedAt,
+    });
+    persistSyncId(id);
+    setLastSyncedAt(updatedAt);
+    return id;
+  }
+
+  function enterEdit() {
+    setDraftRoster(structuredClone(roster));
+    setEditing(true);
+    setNewLeaderName("");
+    setNewLeaderPhone("");
+  }
+
+  function cancelEdit() {
+    setDraftRoster(null);
+    setEditing(false);
+  }
+
+  async function saveEdit() {
+    if (!draftRoster) return;
+    setSaving(true);
+    try {
+      const next = structuredClone(draftRoster);
+      setRoster(next);
+      await pushCloud(next, state, submissions);
+      setDraftRoster(null);
+      setEditing(false);
+      flash("Saved for all devices");
+    } catch (error) {
+      flash(error instanceof Error ? error.message : "Save failed");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function syncNow() {
+    setSaving(true);
+    try {
+      await pushCloud(roster, state, submissions);
+      flash("Synced to all devices");
+    } catch (error) {
+      flash(error instanceof Error ? error.message : "Sync failed");
+    } finally {
+      setSaving(false);
+    }
   }
 
   function openLeader(group: string) {
@@ -197,9 +349,10 @@ export function AttendanceLedger() {
   }
 
   function markGroupPresent(group: string) {
+    const people = memberNames(activeRoster[group]);
     setState((prev) => {
       const day = { ...(prev[currentDate] || {}) };
-      for (const name of roster[group] || []) {
+      for (const name of people) {
         day[personKey(group, name)] = "present";
       }
       return { ...prev, [currentDate]: day };
@@ -208,23 +361,42 @@ export function AttendanceLedger() {
   }
 
   function addLeader() {
+    if (!editing || !draftRoster) {
+      flash("Turn on Edit mode first");
+      return;
+    }
     const group = formatGroupName(newLeaderName);
     if (!group) {
       flash("Enter a leader name");
       return;
     }
-    if (roster[group] || Object.keys(roster).some((g) => g.toLowerCase() === group.toLowerCase())) {
+    if (
+      draftRoster[group] ||
+      Object.keys(draftRoster).some((g) => g.toLowerCase() === group.toLowerCase())
+    ) {
       flash("That leader already exists");
       return;
     }
-    setRoster((prev) => ({ ...prev, [group]: [] }));
+    setDraftRoster((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        [group]: { phone: newLeaderPhone.trim(), members: [] },
+      };
+    });
     setNewLeaderName("");
-    flash(`Added ${leaderLabel(group)}`);
+    setNewLeaderPhone("");
+    flash("Leader added — tap Save to sync");
   }
 
   function removeLeader(group: string) {
+    if (!editing || !draftRoster) {
+      flash("Turn on Edit mode first");
+      return;
+    }
     if (!window.confirm(`Remove ${leaderLabel(group)} and their members?`)) return;
-    setRoster((prev) => {
+    setDraftRoster((prev) => {
+      if (!prev) return prev;
       const next = { ...prev };
       delete next[group];
       return next;
@@ -238,30 +410,84 @@ export function AttendanceLedger() {
       return next;
     });
     if (activeGroup === group) goHome();
-    flash("Leader removed");
+    flash("Leader removed — tap Save to sync");
+  }
+
+  function setLeaderPhone(group: string, phone: string) {
+    if (!editing || !draftRoster?.[group]) return;
+    setDraftRoster((prev) => {
+      if (!prev?.[group]) return prev;
+      return {
+        ...prev,
+        [group]: { ...prev[group], phone },
+      };
+    });
   }
 
   function addPerson(group: string) {
-    const name = (draftNames[group] || "").trim();
+    if (!editing || !draftRoster) {
+      flash("Turn on Edit mode first");
+      return;
+    }
+    const draft = draftMembers[group] || { name: "", phone: "" };
+    const name = draft.name.trim();
     if (!name) return;
-    setRoster((prev) => {
-      const people = prev[group] || [];
-      if (people.some((p) => p.toLowerCase() === name.toLowerCase())) return prev;
-      return { ...prev, [group]: [...people, name] };
+    const members = draftRoster[group]?.members || [];
+    if (members.some((member) => member.name.toLowerCase() === name.toLowerCase())) {
+      return;
+    }
+    setDraftRoster((prev) => {
+      if (!prev?.[group]) return prev;
+      return {
+        ...prev,
+        [group]: {
+          ...prev[group],
+          members: [
+            ...prev[group].members,
+            { name, phone: draft.phone.trim() },
+          ],
+        },
+      };
     });
-    setDraftNames((prev) => ({ ...prev, [group]: "" }));
-    flash(`Added ${name}`);
+    setDraftMembers((prev) => ({ ...prev, [group]: { name: "", phone: "" } }));
+    flash("Member added — tap Save to sync");
   }
 
   function removePerson(group: string, name: string) {
-    if (!window.confirm(`Remove ${name} from ${leaderLabel(group)}?`)) return;
+    if (!editing || !draftRoster) {
+      flash("Turn on Edit mode first");
+      return;
+    }
+    if (!window.confirm(`Remove ${name}?`)) return;
     const key = personKey(group, name);
-    setRoster((prev) => ({
-      ...prev,
-      [group]: (prev[group] || []).filter((person) => person !== name),
-    }));
+    setDraftRoster((prev) => {
+      if (!prev?.[group]) return prev;
+      return {
+        ...prev,
+        [group]: {
+          ...prev[group],
+          members: prev[group].members.filter((member) => member.name !== name),
+        },
+      };
+    });
     setState((prev) => purgePersonKeys(prev, (k) => k === key));
-    flash(`Removed ${name}`);
+    flash("Member removed — tap Save to sync");
+  }
+
+  function setMemberPhone(group: string, name: string, phone: string) {
+    if (!editing || !draftRoster) return;
+    setDraftRoster((prev) => {
+      if (!prev?.[group]) return prev;
+      return {
+        ...prev,
+        [group]: {
+          ...prev[group],
+          members: prev[group].members.map((member) =>
+            member.name === name ? { ...member, phone } : member,
+          ),
+        },
+      };
+    });
   }
 
   async function addImages(files: FileList | null) {
@@ -326,7 +552,7 @@ export function AttendanceLedger() {
     });
   }
 
-  function submitWeek() {
+  async function submitWeek() {
     if (!activeGroup) return;
     const key = submissionKey(activeGroup, currentDate);
     const attendance = groupAttendance(dayState, activeGroup, activePeople);
@@ -339,8 +565,14 @@ export function AttendanceLedger() {
       notes: notes.trim(),
       submittedAt: new Date().toISOString(),
     };
-    setSubmissions((prev) => ({ ...prev, [key]: next }));
-    flash("Weekly submission saved");
+    const nextSubs = { ...submissions, [key]: next };
+    setSubmissions(nextSubs);
+    try {
+      await pushCloud(roster, state, nextSubs);
+      flash("Weekly submission saved for all devices");
+    } catch {
+      flash("Saved on this phone — Sync failed, tap Sync later");
+    }
   }
 
   function onDateChange(value: string) {
@@ -349,6 +581,52 @@ export function AttendanceLedger() {
       const key = submissionKey(activeGroup, value);
       setNotes(submissions[key]?.notes || "");
     }
+  }
+
+  function modeBanner() {
+    if (editing) {
+      return (
+        <div className="mode-banner">
+          Edit mode — change leaders/members/phones, then tap <b>Save</b> so every
+          device sees the update.
+        </div>
+      );
+    }
+    return (
+      <div className="mode-banner view">
+        View mode — leaders can submit. Tap <b>Edit</b> to change the roster.
+      </div>
+    );
+  }
+
+  function editActions() {
+    if (editing) {
+      return (
+        <>
+          <button type="button" disabled={saving} onClick={() => void saveEdit()}>
+            {saving ? "Saving…" : "Save"}
+          </button>
+          <button type="button" className="secondary" onClick={cancelEdit}>
+            Cancel
+          </button>
+        </>
+      );
+    }
+    return (
+      <>
+        <button type="button" onClick={enterEdit}>
+          Edit
+        </button>
+        <button
+          type="button"
+          className="secondary"
+          disabled={saving}
+          onClick={() => void syncNow()}
+        >
+          {saving ? "Syncing…" : "Sync"}
+        </button>
+      </>
+    );
   }
 
   if (!ready) {
@@ -361,7 +639,7 @@ export function AttendanceLedger() {
             </h1>
           </div>
         </header>
-        <div className="status-msg">Loading…</div>
+        <div className="status-msg">Loading shared church data…</div>
       </div>
     );
   }
@@ -507,36 +785,55 @@ export function AttendanceLedger() {
             <strong className="total-number">{totalMembers}</strong>
           </div>
           <div className="total-meta">
-            {Object.keys(roster).length} leaders · week of {currentDate}
+            {Object.keys(activeRoster).length} leaders · week of {currentDate}
           </div>
         </div>
 
         <div className="hero-copy">
           <h2>Who is submitting this week?</h2>
           <p>
-            Each leader opens their group, marks attendance, adds photos, and
-            submits for the week.
+            Pick your name, mark attendance, add photos, and submit. Use Edit +
+            Save to update leaders for every device.
           </p>
         </div>
 
+        {modeBanner()}
+
         <div className="actions">
-          <button type="button" onClick={() => setView("dashboard")}>
-            Analytics dashboard
-          </button>
-          <button
-            type="button"
-            className="secondary"
-            onClick={() => setView("overview")}
-          >
-            View all groups
-          </button>
+          {editActions()}
+          {!editing ? (
+            <>
+              <button
+                type="button"
+                className="secondary"
+                onClick={() => setView("dashboard")}
+              >
+                Analytics
+              </button>
+              <button
+                type="button"
+                className="secondary"
+                onClick={() => setView("overview")}
+              >
+                All groups
+              </button>
+            </>
+          ) : null}
         </div>
         <div className="status-msg" aria-live="polite">
-          {statusMsg || "Leaders can bookmark their personal link, e.g. ?leader=aliye"}
+          {statusMsg ||
+            (lastSyncedAt
+              ? `Last synced ${new Date(lastSyncedAt).toLocaleString()}`
+              : "Shared across devices when you Save or Sync.")}
+        </div>
+        <div className="share-box">
+          Share this church link with all leaders:
+          <br />
+          <code>{shareUrl(syncId)}</code>
         </div>
 
         <main className="leader-grid">
-          {Object.entries(roster).map(([group, people]) => {
+          {Object.entries(activeRoster).map(([group, record]) => {
             const key = submissionKey(group, currentDate);
             const submitted = Boolean(submissions[key]?.submittedAt);
             const photoCount = submissions[key]?.images.length || 0;
@@ -551,8 +848,11 @@ export function AttendanceLedger() {
                   onClick={() => openLeader(group)}
                 >
                   <span className="leader-name">{leaderLabel(group)}</span>
+                  {record.phone ? (
+                    <span className="phone-line">☎ {record.phone}</span>
+                  ) : null}
                   <span className="leader-meta">
-                    {people.length} people
+                    {(record.members || []).length} people
                     {photoCount > 0
                       ? ` · ${photoCount} photo${photoCount === 1 ? "" : "s"}`
                       : ""}
@@ -561,38 +861,54 @@ export function AttendanceLedger() {
                     {submitted ? "Submitted" : "Tap to submit"}
                   </span>
                 </button>
-                <button
-                  type="button"
-                  className="leader-remove"
-                  onClick={() => removeLeader(group)}
-                >
-                  Remove leader
-                </button>
+                {editing ? (
+                  <button
+                    type="button"
+                    className="leader-remove"
+                    onClick={() => removeLeader(group)}
+                  >
+                    Remove leader
+                  </button>
+                ) : null}
               </div>
             );
           })}
         </main>
 
-        <section className="manage-panel">
-          <h3>Add a leader</h3>
-          <div className="add-row">
-            <input
-              type="text"
-              placeholder="Leader name…"
-              value={newLeaderName}
-              onChange={(event) => setNewLeaderName(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  addLeader();
-                }
-              }}
-            />
-            <button type="button" onClick={addLeader}>
-              Add leader
-            </button>
-          </div>
-        </section>
+        {editing ? (
+          <section className="manage-panel">
+            <h3>Add a leader</h3>
+            <div className="field-row">
+              <input
+                type="text"
+                placeholder="Leader name"
+                value={newLeaderName}
+                onChange={(event) => setNewLeaderName(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    addLeader();
+                  }
+                }}
+              />
+              <input
+                type="tel"
+                placeholder="Phone number"
+                value={newLeaderPhone}
+                onChange={(event) => setNewLeaderPhone(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    addLeader();
+                  }
+                }}
+              />
+              <button type="button" onClick={addLeader}>
+                Add leader
+              </button>
+            </div>
+          </section>
+        ) : null}
       </div>
     );
   }
@@ -600,6 +916,8 @@ export function AttendanceLedger() {
   if (view === "leader" && activeGroup && leaderCounts && activeSubmission) {
     const images = submissions[activeKey!]?.images || [];
     const submittedAt = submissions[activeKey!]?.submittedAt;
+    const leaderPhone = activeRoster[activeGroup]?.phone || "";
+    const memberDraft = draftMembers[activeGroup] || { name: "", phone: "" };
 
     return (
       <div className="attendance-app">
@@ -625,6 +943,8 @@ export function AttendanceLedger() {
           </div>
         </header>
 
+        {modeBanner()}
+
         <div className="summary-bar">
           <div>
             Members: <b>{leaderCounts.total}</b>
@@ -644,7 +964,7 @@ export function AttendanceLedger() {
         </div>
 
         <div className="actions">
-          <button type="button" onClick={submitWeek}>
+          <button type="button" onClick={() => void submitWeek()}>
             {submittedAt ? "Update submission" : "Submit this week"}
           </button>
           <button
@@ -654,84 +974,160 @@ export function AttendanceLedger() {
           >
             Mark all present
           </button>
-          <button
-            type="button"
-            className="secondary danger"
-            onClick={() => removeLeader(activeGroup)}
-          >
-            Remove leader
-          </button>
+          {editActions()}
+          {editing ? (
+            <button
+              type="button"
+              className="secondary danger"
+              onClick={() => removeLeader(activeGroup)}
+            >
+              Remove leader
+            </button>
+          ) : null}
         </div>
         <div className="status-msg" aria-live="polite">
           {statusMsg ||
             (submittedAt
               ? `Last submitted ${new Date(submittedAt).toLocaleString()}`
-              : "Mark attendance, manage members, add photos, then submit.")}
+              : "Mark attendance, add photos, then submit.")}
         </div>
 
         <main>
           <section className="group">
             <div className="group-head static">
+              <h2>Leader phone</h2>
+            </div>
+            <div className="group-body phone-body">
+              {editing ? (
+                <input
+                  className="phone-input"
+                  type="tel"
+                  placeholder="Leader phone number"
+                  value={leaderPhone}
+                  onChange={(event) =>
+                    setLeaderPhone(activeGroup, event.target.value)
+                  }
+                />
+              ) : (
+                <span className="phone-line">
+                  {leaderPhone ? `☎ ${leaderPhone}` : "No phone saved"}
+                </span>
+              )}
+            </div>
+          </section>
+
+          <section className="group">
+            <div className="group-head static">
               <h2>Members & attendance</h2>
-              <span className="group-count">{activePeople.length}</span>
+              <span className="group-count">{activeMembers.length}</span>
             </div>
             <div className="group-body">
-              {activePeople.map((name) => {
-                const key = personKey(activeGroup, name);
+              {activeMembers.map((member) => {
+                const key = personKey(activeGroup, member.name);
                 const current = dayState[key];
                 return (
                   <div className="person-row" key={key}>
-                    <span className="person-name">{name}</span>
+                    <div className="person-main">
+                      <span className="person-name">{member.name}</span>
+                      {editing ? (
+                        <input
+                          className="phone-input"
+                          type="tel"
+                          placeholder="Phone"
+                          value={member.phone || ""}
+                          onChange={(event) =>
+                            setMemberPhone(
+                              activeGroup,
+                              member.name,
+                              event.target.value,
+                            )
+                          }
+                        />
+                      ) : member.phone ? (
+                        <span className="person-phone">☎ {member.phone}</span>
+                      ) : null}
+                    </div>
                     <div className="person-actions">
                       <span className="toggle-group">
                         <button
                           type="button"
                           className={`toggle-btn present${current === "present" ? " active" : ""}`}
-                          onClick={() => setStatus(activeGroup, name, "present")}
+                          onClick={() =>
+                            setStatus(activeGroup, member.name, "present")
+                          }
                         >
                           Present
                         </button>
                         <button
                           type="button"
                           className={`toggle-btn absent${current === "absent" ? " active" : ""}`}
-                          onClick={() => setStatus(activeGroup, name, "absent")}
+                          onClick={() =>
+                            setStatus(activeGroup, member.name, "absent")
+                          }
                         >
                           Absent
                         </button>
                       </span>
-                      <button
-                        type="button"
-                        className="remove-btn"
-                        onClick={() => removePerson(activeGroup, name)}
-                      >
-                        Remove
-                      </button>
+                      {editing ? (
+                        <button
+                          type="button"
+                          className="remove-btn"
+                          onClick={() => removePerson(activeGroup, member.name)}
+                        >
+                          Remove
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                 );
               })}
-              <div className="add-row">
-                <input
-                  type="text"
-                  placeholder="Add a member…"
-                  value={draftNames[activeGroup] || ""}
-                  onChange={(event) =>
-                    setDraftNames((prev) => ({
-                      ...prev,
-                      [activeGroup]: event.target.value,
-                    }))
-                  }
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      addPerson(activeGroup);
+              {editing ? (
+                <div className="add-row">
+                  <input
+                    type="text"
+                    placeholder="Member name"
+                    value={memberDraft.name}
+                    onChange={(event) =>
+                      setDraftMembers((prev) => ({
+                        ...prev,
+                        [activeGroup]: {
+                          ...memberDraft,
+                          name: event.target.value,
+                        },
+                      }))
                     }
-                  }}
-                />
-                <button type="button" onClick={() => addPerson(activeGroup)}>
-                  Add member
-                </button>
-              </div>
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        addPerson(activeGroup);
+                      }
+                    }}
+                  />
+                  <input
+                    type="tel"
+                    placeholder="Phone"
+                    value={memberDraft.phone}
+                    onChange={(event) =>
+                      setDraftMembers((prev) => ({
+                        ...prev,
+                        [activeGroup]: {
+                          ...memberDraft,
+                          phone: event.target.value,
+                        },
+                      }))
+                    }
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        addPerson(activeGroup);
+                      }
+                    }}
+                  />
+                  <button type="button" onClick={() => addPerson(activeGroup)}>
+                    Add member
+                  </button>
+                </div>
+              ) : null}
             </div>
           </section>
 
@@ -823,7 +1219,7 @@ export function AttendanceLedger() {
           </section>
 
           <div className="actions bottom-actions">
-            <button type="button" onClick={submitWeek}>
+            <button type="button" onClick={() => void submitWeek()}>
               {submittedAt ? "Update submission" : "Submit this week"}
             </button>
           </div>
@@ -864,7 +1260,8 @@ export function AttendanceLedger() {
       </div>
 
       <main>
-        {Object.entries(roster).map(([group, people]) => {
+        {Object.entries(activeRoster).map(([group, record]) => {
+          const people = memberNames(record);
           const counts = countGroup(dayState, group, people);
           const key = submissionKey(group, currentDate);
           const sub = submissions[key];

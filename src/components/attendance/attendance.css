@@ -178,15 +178,113 @@
   padding: 10px;
   border-bottom: 1px solid #f0ede1;
   font-size: 15px;
+  flex-wrap: wrap;
 }
 
 .attendance-app .person-row:last-of-type {
   border-bottom: none;
 }
 
-.attendance-app .person-name {
+.attendance-app .person-main {
   flex: 1;
-  min-width: 0;
+  min-width: 140px;
+}
+
+.attendance-app .person-name {
+  display: block;
+}
+
+.attendance-app .person-phone {
+  display: block;
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.attendance-app .phone-input {
+  flex: 1;
+  min-width: 140px;
+  width: 100%;
+  margin-top: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  background: white;
+  color: var(--ink);
+}
+
+.attendance-app .phone-body {
+  padding: 12px;
+}
+
+.attendance-app .mode-banner {
+  max-width: 880px;
+  margin: 12px auto 0;
+  padding: 10px 14px;
+  width: calc(100% - 48px);
+  border-radius: 8px;
+  background: #fff7e6;
+  border: 1px solid #ead7a8;
+  color: #6a5520;
+  font-size: 13px;
+}
+
+.attendance-app .mode-banner.view {
+  background: #eef5f0;
+  border-color: #c7d9ce;
+  color: var(--forest-deep);
+}
+
+.attendance-app .share-box {
+  max-width: 880px;
+  margin: 12px auto 0;
+  padding: 12px;
+  width: calc(100% - 48px);
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 13px;
+  color: var(--muted);
+  word-break: break-all;
+}
+
+.attendance-app .share-box code {
+  color: var(--forest-deep);
+  font-size: 12.5px;
+}
+
+.attendance-app .field-row {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  padding: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.attendance-app .field-row input {
+  flex: 1;
+  min-width: 140px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  background: white;
+  color: var(--ink);
+}
+
+.attendance-app .field-row button {
+  background: var(--forest-deep);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 13.5px;
+  cursor: pointer;
 }
 
 .attendance-app .toggle-group {
@@ -223,10 +321,12 @@
   gap: 8px;
   padding: 10px;
   border-top: 1px solid #f0ede1;
+  flex-wrap: wrap;
 }
 
 .attendance-app .add-row input {
   flex: 1;
+  min-width: 140px;
   padding: 8px 10px;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -310,6 +410,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .attendance-app .hero-copy {
@@ -444,7 +545,8 @@
   color: var(--forest-deep);
 }
 
-.attendance-app .manage-panel .add-row {
+.attendance-app .manage-panel .add-row,
+.attendance-app .manage-panel .field-row {
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--card);
@@ -564,9 +666,15 @@
   color: var(--forest-deep);
 }
 
-.attendance-app .leader-meta {
+.attendance-app .leader-meta,
+.attendance-app .phone-line {
   font-size: 13px;
   color: var(--muted);
+}
+
+.attendance-app .actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .attendance-app .leader-status {

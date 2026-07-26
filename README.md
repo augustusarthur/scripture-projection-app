@@ -13,7 +13,7 @@ Track Sunday / small-group attendance by date:
 
 Open the app at [`/attendance`](./src/app/attendance) locally, or the live site:
 
-**https://hypnotic-mote-ufk44ej.shipstatic.com**
+**https://tactile-void-p94b4pf.shipstatic.com/?sync=019f9be4-bfa4-730d-b396-bdeafbd8cb4a**
 
 (Claim it to keep permanently — see [DEPLOY.md](./DEPLOY.md).)
 

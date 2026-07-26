@@ -2,11 +2,11 @@
 
 ## Attendance Ledger — live URL
 
-**Current live site:** https://hypnotic-mote-ufk44ej.shipstatic.com
+**Current live site:** https://tactile-void-p94b4pf.shipstatic.com/?sync=019f9be4-bfa4-730d-b396-bdeafbd8cb4a
 
 ShipStatic free deploys expire after ~3 days unless claimed. To keep this URL permanently, open the claim link while signed in at shipstatic.com:
 
-https://my.shipstatic.com/claim/5d8866039f24a39d624bca72baf5865b7b4a8cb28018c73a12cacef3288559bb
+https://my.shipstatic.com/claim/4d9b490619efe1750c501e612974ffd1c719454edbab885c718c39a12ffda91b
 
 ### Permanent option: GitHub Pages
 

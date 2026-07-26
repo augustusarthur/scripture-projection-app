@@ -4,7 +4,17 @@ export type DayAttendance = Record<string, AttendanceStatus>;
 
 export type AttendanceState = Record<string, DayAttendance>;
 
-export type Roster = Record<string, string[]>;
+export type Member = {
+  name: string;
+  phone: string;
+};
+
+export type GroupRecord = {
+  phone: string;
+  members: Member[];
+};
+
+export type Roster = Record<string, GroupRecord>;
 
 export type SubmissionImage = {
   id: string;
@@ -24,72 +34,115 @@ export type WeekSubmission = {
 
 export type SubmissionsState = Record<string, WeekSubmission>;
 
-export const DEFAULT_ROSTER: Roster = {
-  "Aliye's Group": [
-    "Anthony",
-    "Heba",
-    "Jeremy",
-    "Jordan",
-    "Josiah",
-    "Odera",
-    "Patrick",
-    "Tessa",
-    "Kokou",
-    "Kriti",
-    "Adrianna",
-    "Judith",
-  ],
-  "Augustus's Group": [
-    "Dieumerci",
-    "Ashlee",
-    "Brian",
-    "Furri",
-    "Pastor Glodie",
-    "Pressley",
-    "Terrence",
-    "Israel",
-    "Gerald",
-    "Uyi",
-    "Aliye",
-    "Chancela",
-    "Chidi",
-    "Diana",
-    "Ephraim",
-    "Jeff",
-    "Korey",
-    "Mama Vivian",
-    "Nancy",
-    "Shalyne",
-  ],
-  "Diana's Group": ["Caleb", "Dawit", "Ian", "Kameron", "Lady Nikki", "Rehema"],
-  "Naa's Group": [
-    "Chiche",
-    "Kriti",
-    "Mac Noble",
-    "Mya",
-    "Tarmadji",
-    "Theresa",
-    "Treasure",
-  ],
-  "Shalyne's Group": [
-    "Eden M",
-    "Morris",
-    "Talent",
-    "Trishana",
-    "Vanessa",
-    "Dennis",
-    "Brian",
-    "Douglas",
-    "Maru",
-  ],
-  "Needs a Group": ["Lucky", "Atrel/Joseph", "Dezhon", "Johan"],
+export type CloudPayload = {
+  version: 2;
+  roster: Roster;
+  attendance: AttendanceState;
+  submissions: SubmissionsState;
+  updatedAt: string;
 };
 
-export const ATTENDANCE_STORAGE_KEY = "church-attendance-state-v1";
-export const ROSTER_STORAGE_KEY = "church-attendance-roster-v1";
-export const SUBMISSIONS_STORAGE_KEY = "church-attendance-submissions-v1";
+function membersFromNames(names: string[]): Member[] {
+  return names.map((name) => ({ name, phone: "" }));
+}
+
+export const DEFAULT_ROSTER: Roster = {
+  "Aliye's Group": {
+    phone: "",
+    members: membersFromNames([
+      "Anthony",
+      "Heba",
+      "Jeremy",
+      "Jordan",
+      "Josiah",
+      "Odera",
+      "Patrick",
+      "Tessa",
+      "Kokou",
+      "Kriti",
+      "Adrianna",
+      "Judith",
+    ]),
+  },
+  "Augustus's Group": {
+    phone: "",
+    members: membersFromNames([
+      "Dieumerci",
+      "Ashlee",
+      "Brian",
+      "Furri",
+      "Pastor Glodie",
+      "Pressley",
+      "Terrence",
+      "Israel",
+      "Gerald",
+      "Uyi",
+      "Aliye",
+      "Chancela",
+      "Chidi",
+      "Diana",
+      "Ephraim",
+      "Jeff",
+      "Korey",
+      "Mama Vivian",
+      "Nancy",
+      "Shalyne",
+    ]),
+  },
+  "Diana's Group": {
+    phone: "",
+    members: membersFromNames([
+      "Caleb",
+      "Dawit",
+      "Ian",
+      "Kameron",
+      "Lady Nikki",
+      "Rehema",
+    ]),
+  },
+  "Naa's Group": {
+    phone: "",
+    members: membersFromNames([
+      "Chiche",
+      "Kriti",
+      "Mac Noble",
+      "Mya",
+      "Tarmadji",
+      "Theresa",
+      "Treasure",
+    ]),
+  },
+  "Shalyne's Group": {
+    phone: "",
+    members: membersFromNames([
+      "Eden M",
+      "Morris",
+      "Talent",
+      "Trishana",
+      "Vanessa",
+      "Dennis",
+      "Brian",
+      "Douglas",
+      "Maru",
+    ]),
+  },
+  "Needs a Group": {
+    phone: "",
+    members: membersFromNames(["Lucky", "Atrel/Joseph", "Dezhon", "Johan"]),
+  },
+};
+
+export const ATTENDANCE_STORAGE_KEY = "church-attendance-state-v2";
+export const ROSTER_STORAGE_KEY = "church-attendance-roster-v2";
+export const SUBMISSIONS_STORAGE_KEY = "church-attendance-submissions-v2";
+export const SYNC_ID_STORAGE_KEY = "church-attendance-sync-id-v1";
+
+/** Shared church cloud record — all devices with this link use the same data */
+export const DEFAULT_SYNC_ID = "019f9be4-bfa4-730d-b396-bdeafbd8cb4a";
 
 export const MAX_IMAGES_PER_SUBMISSION = 8;
+
+const SYNC_API = "https://jsonblob.com/api/jsonBlob";
 
 export function personKey(group: string, name: string) {
   return `${group}|${name}`;
@@ -106,8 +159,15 @@ export function todayISODate() {
   return local.toISOString().slice(0, 10);
 }
 
+export function memberNames(group: GroupRecord | undefined) {
+  return (group?.members || []).map((member) => member.name);
+}
+
 export function countRoster(roster: Roster) {
-  return Object.values(roster).reduce((sum, people) => sum + people.length, 0);
+  return Object.values(roster).reduce(
+    (sum, group) => sum + (group.members?.length || 0),
+    0,
+  );
 }
 
 export function formatGroupName(leaderName: string) {
@@ -116,6 +176,45 @@ export function formatGroupName(leaderName: string) {
   if (/group$/i.test(trimmed)) return trimmed;
   if (trimmed.toLowerCase().endsWith("s")) return `${trimmed}' Group`;
   return `${trimmed}'s Group`;
+}
+
+export function normalizeRoster(raw: unknown): Roster {
+  if (!raw || typeof raw !== "object") return structuredClone(DEFAULT_ROSTER);
+  const next: Roster = {};
+  for (const [group, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (Array.isArray(value)) {
+      next[group] = {
+        phone: "",
+        members: value
+          .filter((item): item is string => typeof item === "string")
+          .map((name) => ({ name, phone: "" })),
+      };
+      continue;
+    }
+    if (value && typeof value === "object") {
+      const record = value as { phone?: unknown; members?: unknown };
+      const membersRaw = Array.isArray(record.members) ? record.members : [];
+      next[group] = {
+        phone: typeof record.phone === "string" ? record.phone : "",
+        members: membersRaw
+          .map((item) => {
+            if (typeof item === "string") return { name: item, phone: "" };
+            if (item && typeof item === "object") {
+              const member = item as { name?: unknown; phone?: unknown };
+              if (typeof member.name === "string" && member.name.trim()) {
+                return {
+                  name: member.name.trim(),
+                  phone: typeof member.phone === "string" ? member.phone : "",
+                };
+              }
+            }
+            return null;
+          })
+          .filter((item): item is Member => Boolean(item)),
+      };
+    }
+  }
+  return Object.keys(next).length ? next : structuredClone(DEFAULT_ROSTER);
 }
 
 export type GroupAnalytics = {
@@ -157,10 +256,10 @@ function dayTotals(
   let present = 0;
   let absent = 0;
   let total = 0;
-  for (const [group, people] of Object.entries(roster)) {
-    for (const name of people) {
+  for (const [group, record] of Object.entries(roster)) {
+    for (const member of record.members || []) {
       total += 1;
-      const status = day[personKey(group, name)];
+      const status = day[personKey(group, member.name)];
       if (status === "present") present += 1;
       if (status === "absent") absent += 1;
     }
@@ -176,6 +275,24 @@ function dayTotals(
   };
 }
 
+export function leaderSlug(group: string) {
+  return group
+    .toLowerCase()
+    .replace(/['']/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+export function leaderLabel(group: string) {
+  if (group === "Needs a Group") return "Needs a Group";
+  return group.replace(/'s Group$/i, "");
+}
+
+export function findGroupBySlug(roster: Roster, slug: string) {
+  const normalized = slug.toLowerCase();
+  return Object.keys(roster).find((group) => leaderSlug(group) === normalized);
+}
+
 export function buildAnalytics(
   roster: Roster,
   state: AttendanceState,
@@ -189,11 +306,11 @@ export function buildAnalytics(
 
   let submittedGroups = 0;
   const byGroup: GroupAnalytics[] = Object.entries(roster).map(
-    ([group, people]) => {
+    ([group, record]) => {
       let present = 0;
       let absent = 0;
-      for (const name of people) {
-        const status = day[personKey(group, name)];
+      for (const member of record.members || []) {
+        const status = day[personKey(group, member.name)];
         if (status === "present") present += 1;
         if (status === "absent") absent += 1;
       }
@@ -203,10 +320,10 @@ export function buildAnalytics(
       return {
         group,
         label: leaderLabel(group),
-        members: people.length,
+        members: record.members.length,
         present,
         absent,
-        unmarked: Math.max(people.length - present - absent, 0),
+        unmarked: Math.max(record.members.length - present - absent, 0),
         rate: marked ? Math.round((present / marked) * 100) : 0,
         submitted: Boolean(sub?.submittedAt),
         photos: sub?.images.length || 0,
@@ -238,7 +355,9 @@ export function buildAnalytics(
       };
     });
 
-  const weeksWithMarks = recentWeeks.filter((week) => week.present + week.absent > 0);
+  const weeksWithMarks = recentWeeks.filter(
+    (week) => week.present + week.absent > 0,
+  );
   const averageRate = weeksWithMarks.length
     ? Math.round(
         weeksWithMarks.reduce((sum, week) => sum + week.rate, 0) /
@@ -259,24 +378,6 @@ export function buildAnalytics(
     recentWeeks,
     averageRate,
   };
-}
-
-export function leaderSlug(group: string) {
-  return group
-    .toLowerCase()
-    .replace(/['']/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-}
-
-export function leaderLabel(group: string) {
-  if (group === "Needs a Group") return "Needs a Group";
-  return group.replace(/'s Group$/i, "");
-}
-
-export function findGroupBySlug(roster: Roster, slug: string) {
-  const normalized = slug.toLowerCase();
-  return Object.keys(roster).find((group) => leaderSlug(group) === normalized);
 }
 
 export function emptySubmission(
@@ -326,4 +427,91 @@ export async function compressImageFile(
     dataUrl,
     addedAt: new Date().toISOString(),
   };
+}
+
+function stripHeavyImages(submissions: SubmissionsState): SubmissionsState {
+  const next: SubmissionsState = {};
+  for (const [key, submission] of Object.entries(submissions)) {
+    next[key] = {
+      ...submission,
+      // Keep images in cloud sync so other devices can view submissions
+      images: (submission.images || []).slice(0, MAX_IMAGES_PER_SUBMISSION),
+    };
+  }
+  return next;
+}
+
+export async function loadCloudSync(
+  syncId: string,
+): Promise<CloudPayload | null> {
+  try {
+    const response = await fetch(`${SYNC_API}/${syncId}`, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+    if (!response.ok) return null;
+    const data = (await response.json()) as Partial<CloudPayload>;
+    if (!data || typeof data !== "object") return null;
+    return {
+      version: 2,
+      roster: normalizeRoster(data.roster),
+      attendance:
+        data.attendance && typeof data.attendance === "object"
+          ? data.attendance
+          : {},
+      submissions:
+        data.submissions && typeof data.submissions === "object"
+          ? data.submissions
+          : {},
+      updatedAt:
+        typeof data.updatedAt === "string"
+          ? data.updatedAt
+          : new Date().toISOString(),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function saveCloudSync(
+  syncId: string | null,
+  payload: Omit<CloudPayload, "version" | "updatedAt"> & {
+    updatedAt?: string;
+  },
+): Promise<string> {
+  const body: CloudPayload = {
+    version: 2,
+    roster: payload.roster,
+    attendance: payload.attendance,
+    submissions: stripHeavyImages(payload.submissions),
+    updatedAt: payload.updatedAt || new Date().toISOString(),
+  };
+
+  if (syncId) {
+    const update = await fetch(`${SYNC_API}/${syncId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+    if (update.ok) return syncId;
+  }
+
+  const create = await fetch(SYNC_API, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  if (!create.ok) {
+    throw new Error("Could not save to shared church link.");
+  }
+  const location = create.headers.get("Location") || "";
+  const createdId = location.split("/").filter(Boolean).pop();
+  if (!createdId) throw new Error("Could not create shared church link.");
+  return createdId;
 }
