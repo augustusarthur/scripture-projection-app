@@ -57,6 +57,9 @@ main{margin-top:18px;padding-bottom:24px}
 .toggle-btn.present.active{background:var(--present);border-color:var(--present);color:#fff}
 .toggle-btn.absent.active{background:var(--absent);border-color:var(--absent);color:#fff}
 .remove-btn{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:12px;padding:4px 6px}
+.move-control{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.move-control select{border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:12.5px;background:#fff;color:var(--ink);max-width:160px}
+.move-btn{background:#fff!important;color:var(--forest-deep)!important;border:1px solid var(--line)!important;padding:6px 10px!important;font-size:12.5px!important}
 .add-row{display:flex;gap:8px;padding:10px;border-top:1px solid #f0ede1;flex-wrap:wrap}
 .notes-input{width:100%;min-height:84px;resize:vertical}
 .photo-body{padding:14px}.photo-hint,.photo-empty,.notes-preview{margin:0 0 12px;color:var(--muted);font-size:13.5px}
@@ -263,6 +266,24 @@ function removePerson(g,name){
   Object.keys(state).forEach(d=>{if(state[d])delete state[d][key]});
   flash("Member removed — tap Save to sync"); render();
 }
+function movePerson(fromGroup,name,toGroup){
+  if(!editing||!draftRoster) return flash("Turn on Edit mode first");
+  if(!toGroup||toGroup===fromGroup) return flash("Choose a different leader");
+  const from=draftRoster[fromGroup], to=draftRoster[toGroup];
+  if(!from||!to) return flash("Could not move member");
+  const member=(from.members||[]).find(m=>m.name===name);
+  if(!member) return flash("Member not found");
+  if((to.members||[]).some(m=>m.name.toLowerCase()===name.toLowerCase())) return flash("Already in that group");
+  draftRoster[fromGroup]={...from, members:(from.members||[]).filter(m=>m.name!==name)};
+  draftRoster[toGroup]={...to, members:(to.members||[]).concat([{...member}])};
+  const fromKey=personKey(fromGroup,name), toKey=personKey(toGroup,name);
+  Object.keys(state).forEach(d=>{
+    const day=state[d]; if(!day||!day[fromKey]) return;
+    if(!day[toKey]) day[toKey]=day[fromKey];
+    delete day[fromKey];
+  });
+  flash("Moved "+name+" — tap Save to sync"); render();
+}
 function setMemberPhone(g,name,phone){
   if(!editing||!draftRoster) return;
   const m=(draftRoster[g].members||[]).find(x=>x.name===name); if(m) m.phone=phone;
@@ -374,8 +395,10 @@ function renderLeader(){
   const r=activeRoster(); const people=(r[activeGroup]?.members)||[]; const counts=countGroup(activeGroup);
   const sub=getSub(activeGroup,currentDate); const images=(sub&&sub.images)||[]; const submittedAt=sub&&sub.submittedAt; const day=dayState();
   const leaderPhone=r[activeGroup]?.phone||"";
+  const otherGroups=Object.keys(r).filter(g=>g!==activeGroup);
   const rows=people.map(m=>{
     const current=day[personKey(activeGroup,m.name)];
+    const moveOptions=otherGroups.map(g=>`<option value="${esc(g)}">${esc(leaderLabel(g))}</option>`).join("");
     return `<div class="person-row">
       <div class="person-main">
         <span class="person-name">${esc(m.name)}</span>
@@ -387,7 +410,11 @@ function renderLeader(){
           <button type="button" class="toggle-btn present${current==="present"?" active":""}" data-name="${esc(m.name)}" data-val="present">Present</button>
           <button type="button" class="toggle-btn absent${current==="absent"?" active":""}" data-name="${esc(m.name)}" data-val="absent">Absent</button>
         </span>
-        ${editing?`<button type="button" class="remove-btn" data-remove-member="${esc(m.name)}">Remove</button>`:""}
+        ${editing?`<label class="move-control">
+          <select data-move-select="${esc(m.name)}"><option value="">Move to…</option>${moveOptions}</select>
+          <button type="button" class="move-btn" data-move-member="${esc(m.name)}">Move</button>
+        </label>
+        <button type="button" class="remove-btn" data-remove-member="${esc(m.name)}">Remove</button>`:""}
       </div></div>`;
   }).join("");
   const photos=images.map(img=>`<figure class="photo-tile"><img src="${img.dataUrl}" alt="${esc(img.name)}"><button type="button" class="photo-remove" data-remove="${esc(img.id)}">Remove</button></figure>`).join("");
@@ -451,6 +478,13 @@ function renderLeader(){
   app.querySelectorAll(".toggle-btn").forEach(b=>b.onclick=()=>setStatus(activeGroup,b.dataset.name,b.dataset.val));
   app.querySelectorAll("[data-remove]").forEach(b=>b.onclick=()=>removeImage(b.getAttribute("data-remove")));
   app.querySelectorAll("[data-remove-member]").forEach(b=>b.onclick=()=>removePerson(activeGroup,b.getAttribute("data-remove-member")));
+  app.querySelectorAll("[data-move-member]").forEach(b=>{
+    b.onclick=()=>{
+      const name=b.getAttribute("data-move-member");
+      const select=b.parentElement && b.parentElement.querySelector("select");
+      movePerson(activeGroup, name, select ? select.value : "");
+    };
+  });
   if(editing){
     const lp=document.getElementById("leaderPhone");
     if(lp) lp.oninput=e=>setLeaderPhone(activeGroup,e.target.value);

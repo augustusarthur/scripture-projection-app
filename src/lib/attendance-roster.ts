@@ -293,6 +293,60 @@ export function findGroupBySlug(roster: Roster, slug: string) {
   return Object.keys(roster).find((group) => leaderSlug(group) === normalized);
 }
 
+/** Move a member between groups. Returns null if the move is invalid. */
+export function moveMemberInRoster(
+  roster: Roster,
+  fromGroup: string,
+  toGroup: string,
+  memberName: string,
+): Roster | null {
+  if (!fromGroup || !toGroup || fromGroup === toGroup) return null;
+  const from = roster[fromGroup];
+  const to = roster[toGroup];
+  if (!from || !to) return null;
+  const member = from.members.find((item) => item.name === memberName);
+  if (!member) return null;
+  if (
+    to.members.some(
+      (item) => item.name.toLowerCase() === memberName.toLowerCase(),
+    )
+  ) {
+    return null;
+  }
+  return {
+    ...roster,
+    [fromGroup]: {
+      ...from,
+      members: from.members.filter((item) => item.name !== memberName),
+    },
+    [toGroup]: {
+      ...to,
+      members: [...to.members, { ...member }],
+    },
+  };
+}
+
+/** Remap attendance keys after a member moves groups. */
+export function remapsAttendanceForMove(
+  state: AttendanceState,
+  fromGroup: string,
+  toGroup: string,
+  memberName: string,
+): AttendanceState {
+  const fromKey = personKey(fromGroup, memberName);
+  const toKey = personKey(toGroup, memberName);
+  const next: AttendanceState = {};
+  for (const [date, day] of Object.entries(state)) {
+    const copy = { ...day };
+    if (copy[fromKey]) {
+      if (!copy[toKey]) copy[toKey] = copy[fromKey];
+      delete copy[fromKey];
+    }
+    next[date] = copy;
+  }
+  return next;
+}
+
 export function buildAnalytics(
   roster: Roster,
   state: AttendanceState,

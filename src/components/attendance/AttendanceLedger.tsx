@@ -26,8 +26,10 @@ import {
   leaderSlug,
   loadCloudSync,
   memberNames,
+  moveMemberInRoster,
   normalizeRoster,
   personKey,
+  remapsAttendanceForMove,
   saveCloudSync,
   submissionKey,
   todayISODate,
@@ -121,6 +123,7 @@ export function AttendanceLedger() {
   const [submissions, setSubmissions] = useState<SubmissionsState>({});
   const [notes, setNotes] = useState("");
   const [draftMembers, setDraftMembers] = useState<DraftMemberFields>({});
+  const [moveTargets, setMoveTargets] = useState<Record<string, string>>({});
   const [newLeaderName, setNewLeaderName] = useState("");
   const [newLeaderPhone, setNewLeaderPhone] = useState("");
   const [statusMsg, setStatusMsg] = useState("");
@@ -472,6 +475,32 @@ export function AttendanceLedger() {
     });
     setState((prev) => purgePersonKeys(prev, (k) => k === key));
     flash("Member removed — tap Save to sync");
+  }
+
+  function movePerson(fromGroup: string, name: string, toGroup: string) {
+    if (!editing || !draftRoster) {
+      flash("Turn on Edit mode first");
+      return;
+    }
+    if (!toGroup || toGroup === fromGroup) {
+      flash("Choose a different leader");
+      return;
+    }
+    const moved = moveMemberInRoster(draftRoster, fromGroup, toGroup, name);
+    if (!moved) {
+      flash("Could not move — already in that group?");
+      return;
+    }
+    setDraftRoster(moved);
+    setState((prev) =>
+      remapsAttendanceForMove(prev, fromGroup, toGroup, name),
+    );
+    setMoveTargets((prev) => {
+      const copy = { ...prev };
+      delete copy[`${fromGroup}|${name}`];
+      return copy;
+    });
+    flash(`Moved ${name} — tap Save to sync`);
   }
 
   function setMemberPhone(group: string, name: string, phone: string) {
@@ -1069,13 +1098,57 @@ export function AttendanceLedger() {
                         </button>
                       </span>
                       {editing ? (
-                        <button
-                          type="button"
-                          className="remove-btn"
-                          onClick={() => removePerson(activeGroup, member.name)}
-                        >
-                          Remove
-                        </button>
+                        <>
+                          <label className="move-control">
+                            <span className="sr-only">Move {member.name}</span>
+                            <select
+                              value={
+                                moveTargets[`${activeGroup}|${member.name}`] ||
+                                ""
+                              }
+                              onChange={(event) =>
+                                setMoveTargets((prev) => ({
+                                  ...prev,
+                                  [`${activeGroup}|${member.name}`]:
+                                    event.target.value,
+                                }))
+                              }
+                            >
+                              <option value="">Move to…</option>
+                              {Object.keys(activeRoster)
+                                .filter((group) => group !== activeGroup)
+                                .map((group) => (
+                                  <option key={group} value={group}>
+                                    {leaderLabel(group)}
+                                  </option>
+                                ))}
+                            </select>
+                            <button
+                              type="button"
+                              className="secondary move-btn"
+                              onClick={() =>
+                                movePerson(
+                                  activeGroup,
+                                  member.name,
+                                  moveTargets[
+                                    `${activeGroup}|${member.name}`
+                                  ] || "",
+                                )
+                              }
+                            >
+                              Move
+                            </button>
+                          </label>
+                          <button
+                            type="button"
+                            className="remove-btn"
+                            onClick={() =>
+                              removePerson(activeGroup, member.name)
+                            }
+                          >
+                            Remove
+                          </button>
+                        </>
                       ) : null}
                     </div>
                   </div>
