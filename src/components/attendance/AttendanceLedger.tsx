@@ -939,7 +939,10 @@ export function AttendanceLedger() {
                     <span className="phone-line">☎ {record.phone}</span>
                   ) : null}
                   <span className="leader-meta">
-                    {(record.members || []).length} people
+                    {(record.members || []).length} active
+                    {(record.icu || []).length
+                      ? ` · ${record.icu.length} ICU`
+                      : ""}
                     {photoCount > 0
                       ? ` · ${photoCount} photo${photoCount === 1 ? "" : "s"}`
                       : ""}
