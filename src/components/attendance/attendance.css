@@ -17,8 +17,9 @@
     var(--paper);
   color: var(--ink);
   font-family: "Segoe UI", Helvetica, Arial, sans-serif;
-  padding: 0 0 60px;
+  padding: 0 0 calc(60px + env(safe-area-inset-bottom));
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .attendance-app * {
@@ -28,11 +29,66 @@
 .attendance-app header {
   background: linear-gradient(160deg, var(--forest-deep) 0%, #243f32 100%);
   color: var(--paper);
-  padding: 28px 24px 22px;
+  padding: calc(28px + env(safe-area-inset-top)) 24px 22px;
   position: sticky;
   top: 0;
   z-index: 10;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+}
+
+.attendance-app .install-tip {
+  max-width: 880px;
+  margin: 14px auto 0;
+  padding: 14px 24px;
+  border-radius: 12px;
+  border: 1px solid #c7d9ce;
+  background: linear-gradient(180deg, #f3f7f4, #fff);
+  color: var(--forest-deep);
+  font-size: 13.5px;
+  line-height: 1.45;
+  box-sizing: border-box;
+}
+
+.attendance-app .install-tip h3 {
+  margin: 0 0 6px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 16px;
+}
+
+.attendance-app .install-tip p {
+  margin: 0;
+}
+
+.attendance-app .install-tip ol {
+  margin: 8px 0 0;
+  padding-left: 1.2rem;
+}
+
+.attendance-app .install-tip li {
+  margin: 4px 0;
+}
+
+.attendance-app .install-tip .tip-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.attendance-app .install-tip button {
+  background: var(--forest-deep);
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.attendance-app .install-tip button.secondary {
+  background: #fff;
+  color: var(--forest-deep);
+  border: 1px solid var(--line);
 }
 
 .attendance-app .header-inner {

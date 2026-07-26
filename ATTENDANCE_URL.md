@@ -19,3 +19,12 @@ https://tactile-void-p94b4pf.shipstatic.com/?sync=019f9be4-bfa4-730d-b396-bdeafb
 ## Claim link (one-time, for permanence)
 
 https://my.shipstatic.com/claim/4d9b490619efe1750c501e612974ffd1c719454edbab885c718c39a12ffda91b
+
+## Install on iPhone (Home Screen app)
+
+1. Open the church link above in **Safari** (not Chrome/Instagram in-app browsers).
+2. Tap **Share** (square with ↑).
+3. Tap **Add to Home Screen** → **Add**.
+4. Open **Attendance** from your Home Screen — it runs full-screen like an app.
+
+The installed app keeps the same sync link, so leaders stay on the shared roster.

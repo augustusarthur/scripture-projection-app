@@ -134,6 +134,7 @@ export function AttendanceLedger() {
   const [newLeaderPhone, setNewLeaderPhone] = useState("");
   const [statusMsg, setStatusMsg] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [showInstallTip, setShowInstallTip] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const statusTimer = useRef<number | null>(null);
@@ -201,6 +202,22 @@ export function AttendanceLedger() {
         }
       }
       setReady(true);
+
+      const standalone =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        // iOS Safari
+        Boolean(
+          (window.navigator as Navigator & { standalone?: boolean }).standalone,
+        );
+      const dismissed =
+        localStorage.getItem("attendance-install-dismissed-v1") === "1";
+      setShowInstallTip(!standalone && !dismissed);
+
+      if ("serviceWorker" in navigator) {
+        void navigator.serviceWorker
+          .register("/attendance/sw.js")
+          .catch(() => {});
+      }
     }
 
     void boot();
@@ -952,6 +969,42 @@ export function AttendanceLedger() {
             Save to update leaders for every device.
           </p>
         </div>
+
+        {showInstallTip ? (
+          <div className="install-tip">
+            <h3>Install on your iPhone</h3>
+            <p>
+              Add Attendance to your Home Screen so it opens full-screen like an
+              app (same church link).
+            </p>
+            <ol>
+              <li>
+                Tap the <b>Share</b> button (square with arrow) in Safari
+              </li>
+              <li>
+                Scroll and tap <b>Add to Home Screen</b>
+              </li>
+              <li>
+                Tap <b>Add</b> — then open the Attendance icon anytime
+              </li>
+            </ol>
+            <div className="tip-actions">
+              <button
+                type="button"
+                className="secondary"
+                onClick={() => {
+                  localStorage.setItem(
+                    "attendance-install-dismissed-v1",
+                    "1",
+                  );
+                  setShowInstallTip(false);
+                }}
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        ) : null}
 
         {modeBanner()}
 
