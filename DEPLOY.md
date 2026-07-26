@@ -1,12 +1,16 @@
 # Deploy guides
 
-## Attendance Ledger — live URL
+## Attendance Ledger — live URL (LOCKED)
 
-**Current live site:** https://tactile-void-p94b4pf.shipstatic.com/?sync=019f9be4-bfa4-730d-b396-bdeafbd8cb4a
+**Do not replace this URL.** See [ATTENDANCE_URL.md](./ATTENDANCE_URL.md).
 
-ShipStatic free deploys expire after ~3 days unless claimed. To keep this URL permanently, open the claim link while signed in at shipstatic.com:
+**Church link:** https://tactile-void-p94b4pf.shipstatic.com/?sync=019f9be4-bfa4-730d-b396-bdeafbd8cb4a
+
+Claim once to keep it permanent:
 
 https://my.shipstatic.com/claim/4d9b490619efe1750c501e612974ffd1c719454edbab885c718c39a12ffda91b
+
+Future code updates must **not** create a new ShipStatic link. Update `docs/` in git; republish to this same claimed deployment only (ShipStatic API key).
 
 ### Permanent option: GitHub Pages
 
