@@ -36,6 +36,10 @@ import {
   submissionKey,
   todayISODate,
 } from "@/lib/attendance-roster";
+import {
+  DashboardChartGrid,
+  OverviewSparkBars,
+} from "@/components/attendance/DashboardCharts";
 import "./attendance.css";
 
 type View = "home" | "leader" | "overview" | "dashboard";
@@ -763,6 +767,14 @@ export function AttendanceLedger() {
             <strong>{analytics.totalMembers}</strong>
           </div>
           <div className="stat-card">
+            <span className="stat-label">Active</span>
+            <strong>{analytics.totalActive}</strong>
+          </div>
+          <div className="stat-card">
+            <span className="stat-label">ICU</span>
+            <strong>{analytics.totalIcu}</strong>
+          </div>
+          <div className="stat-card">
             <span className="stat-label">Leaders</span>
             <strong>{analytics.totalLeaders}</strong>
           </div>
@@ -787,6 +799,11 @@ export function AttendanceLedger() {
         </div>
 
         <main>
+          <DashboardChartGrid
+            analytics={analytics}
+            onOpenLeader={openLeader}
+          />
+
           <section className="group">
             <div className="group-head static">
               <h2>By leader this week</h2>
@@ -803,8 +820,9 @@ export function AttendanceLedger() {
                       {row.label}
                     </button>
                     <span className="muted">
-                      {row.members} members · {row.present} present · {row.absent}{" "}
-                      absent
+                      {row.members} active
+                      {row.icu ? ` · ${row.icu} ICU` : ""} · {row.present}{" "}
+                      present · {row.absent} absent
                       {row.submitted ? " · submitted" : ""}
                       {row.photos ? ` · ${row.photos} photos` : ""}
                     </span>
@@ -1434,6 +1452,17 @@ export function AttendanceLedger() {
           <span className="total-label">Total members</span>
           <strong className="total-number">{totalMembers}</strong>
         </div>
+        <div className="total-meta">
+          {analytics.totalActive} active · {analytics.totalIcu} ICU · week of{" "}
+          {currentDate}
+        </div>
+      </div>
+
+      <div className="overview-charts">
+        <OverviewSparkBars
+          groups={analytics.byGroup}
+          onOpen={openLeader}
+        />
       </div>
 
       <main>

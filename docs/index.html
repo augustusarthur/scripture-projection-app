@@ -87,6 +87,51 @@ main{margin-top:18px;padding-bottom:24px}
 .rate-bar em{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-style:normal;font-size:12px;font-weight:600;color:var(--forest-deep)}
 .share-box{margin-top:12px;padding:12px;border:1px dashed var(--line);border-radius:10px;background:#fff;font-size:13px;color:var(--muted);word-break:break-all}
 .share-box code{color:var(--forest-deep);font-size:12.5px}
+
+.chart-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.chart-panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 14px 14px;min-width:0}
+.chart-panel.wide{grid-column:1/-1}
+.chart-panel-head h3{margin:0 0 4px;font-family:Georgia,serif;font-size:17px;color:var(--forest-deep)}
+.chart-panel-head p{margin:0 0 14px;font-size:12.5px;color:var(--muted)}
+.chart-empty{margin:8px 0 0;color:var(--muted);font-size:13.5px}
+.chart-legend{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:10px 14px;font-size:12px;color:var(--muted)}
+.chart-legend li{display:inline-flex;align-items:center;gap:6px}
+.chart-legend .swatch{width:10px;height:10px;border-radius:2px;display:inline-block}
+.donut-wrap{position:relative;width:min(180px,100%);margin:0 auto}
+.donut-wrap.compact{width:min(150px,100%)}
+.donut-chart{width:100%;height:auto;display:block}
+.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.donut-center strong{font-family:Georgia,serif;font-size:26px;line-height:1;color:var(--forest-deep)}
+.donut-center span{font-size:12px;color:var(--muted);margin-top:4px}
+.trend-chart{width:100%;height:auto;display:block}
+.chart-gridline{stroke:#efe9d8;stroke-width:1}
+.chart-axis{fill:var(--muted);font-size:9px}
+.trend-area{fill:rgba(44,74,59,.14)}
+.trend-line{fill:none;stroke:var(--forest);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.trend-dot{fill:var(--gold);stroke:var(--forest-deep);stroke-width:1.5}
+.compare-chart{display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr));gap:8px;align-items:end;min-height:180px}
+.compare-col{border:none;background:transparent;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font:inherit;color:inherit;min-width:0}
+.compare-bars{width:100%;max-width:42px;height:140px;display:flex;align-items:flex-end;gap:3px;padding:0 2px}
+.compare-bars .stack{flex:1;border-radius:4px 4px 0 0;min-height:2px}
+.compare-bars .stack.present{background:linear-gradient(180deg,#3d6a54,var(--present))}
+.compare-bars .stack.absent{background:linear-gradient(180deg,#d07a66,var(--absent))}
+.compare-bars .stack.unmarked{background:#cfc6b0}
+.compare-col strong{font-size:12px;color:var(--forest-deep)}
+.compare-col em{font-style:normal;font-size:11px;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.icu-bars{display:flex;flex-direction:column;gap:10px}
+.icu-bar-row{display:grid;grid-template-columns:90px 1fr 28px;gap:10px;align-items:center}
+.icu-bar-label{font-size:13px;color:var(--forest-deep);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.icu-bar-track{height:12px;background:#f3e4df;border-radius:999px;overflow:hidden}
+.icu-bar-fill{display:block;height:100%;background:linear-gradient(90deg,#c56b57,var(--absent));border-radius:inherit}
+.icu-bar-row strong{font-size:13px;color:var(--absent);text-align:right}
+.overview-spark{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 14px;margin-top:14px}
+.spark-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:10px}
+.spark-item{border:none;background:transparent;padding:4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font:inherit;color:inherit}
+.spark-track{width:28px;height:72px;background:#efe9d8;border-radius:8px;display:flex;align-items:flex-end;overflow:hidden}
+.spark-track span{display:block;width:100%;background:linear-gradient(180deg,#3d6a54,var(--forest));border-radius:8px 8px 0 0;min-height:4%}
+.spark-item em{font-style:normal;font-size:11px;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.spark-item strong{font-size:12px;color:var(--forest-deep)}
+@media (max-width:640px){.chart-grid{grid-template-columns:1fr}.icu-bar-row{grid-template-columns:70px 1fr 24px}}
 @media (max-width:640px){.person-row{flex-direction:column;align-items:stretch}.toggle-btn{flex:1;text-align:center}}
 </style>
 </head>
@@ -181,14 +226,18 @@ function persistLocal(){
   localStorage.setItem("church-attendance-sync-id-v1", syncId);
 }
 function buildAnalytics(){
-  const r=activeRoster(); const totalMembers=countRoster(r); const totalLeaders=Object.keys(r).length; const day=dayState();
+  const r=activeRoster(); const totalMembers=countRoster(r);
+  const totalActive=Object.values(r).reduce((s,g)=>s+(g.members||[]).length,0);
+  const totalIcu=Math.max(totalMembers-totalActive,0);
+  const totalLeaders=Object.keys(r).length; const day=dayState();
   let present=0,absent=0,total=0,submittedGroups=0;
   const byGroup=Object.entries(r).map(([group,rec])=>{
-    let p=0,a=0; (rec.members||[]).forEach(m=>{const v=day[personKey(group,m.name)]; if(v==="present")p++; if(v==="absent")a++});
-    present+=p; absent+=a; total+=(rec.members||[]).length;
+    let p=0,a=0; const members=rec.members||[]; const icu=(rec.icu||[]).length;
+    members.forEach(m=>{const v=day[personKey(group,m.name)]; if(v==="present")p++; if(v==="absent")a++});
+    present+=p; absent+=a; total+=members.length;
     const sub=getSub(group,currentDate); if(sub&&sub.submittedAt)submittedGroups++;
     const marked=p+a;
-    return {group,label:leaderLabel(group),members:(rec.members||[]).length,present:p,absent:a,unmarked:Math.max((rec.members||[]).length-p-a,0),rate:marked?Math.round(p/marked*100):0,submitted:!!(sub&&sub.submittedAt),photos:(sub&&sub.images&&sub.images.length)||0};
+    return {group,label:leaderLabel(group),members:members.length,icu,present:p,absent:a,unmarked:Math.max(members.length-p-a,0),rate:marked?Math.round(p/marked*100):0,submitted:!!(sub&&sub.submittedAt),photos:(sub&&sub.images&&sub.images.length)||0};
   });
   const unmarked=Math.max(total-present-absent,0), marked=present+absent, rate=marked?Math.round(present/marked*100):0;
   const dates=new Set(Object.keys(state)); Object.keys(submissions).forEach(k=>{const d=k.split("|").pop(); if(d)dates.add(d)}); dates.add(currentDate);
@@ -197,11 +246,11 @@ function buildAnalytics(){
     Object.entries(r).forEach(([g,rec])=>{(rec.members||[]).forEach(m=>{t++; const v=d[personKey(g,m.name)]; if(v==="present")p++; if(v==="absent")a++}); if(getSub(g,date)&&getSub(g,date).submittedAt)sub++});
     const m=p+a; return {date,present:p,absent:a,unmarked:Math.max(t-p-a,0),total:t,rate:m?Math.round(p/m*100):0,submittedGroups:sub,totalGroups:totalLeaders};
   });
+  const trendWeeks=[...recentWeeks].reverse();
   const withMarks=recentWeeks.filter(w=>w.present+w.absent>0);
   const averageRate=withMarks.length?Math.round(withMarks.reduce((s,w)=>s+w.rate,0)/withMarks.length):0;
-  return {totalMembers,totalLeaders,thisWeek:{date:currentDate,present,absent,unmarked,total,rate,submittedGroups,totalGroups:totalLeaders},byGroup,recentWeeks,averageRate};
+  return {totalMembers,totalActive,totalIcu,totalLeaders,thisWeek:{date:currentDate,present,absent,unmarked,total,rate,submittedGroups,totalGroups:totalLeaders},byGroup,recentWeeks,trendWeeks,averageRate};
 }
-
 function enterEdit(){draftRoster=structuredClone(roster); editing=true; newLeaderName=""; newLeaderPhone=""; render()}
 function cancelEdit(){draftRoster=null; editing=false; render()}
 async function saveEdit(){
@@ -531,10 +580,65 @@ function renderLeader(){
   }
 }
 
+
+function shortDate(date){const p=String(date).split("-"); return p.length===3?`${Number(p[1])}/${Number(p[2])}`:date}
+function legendHtml(items){return `<ul class="chart-legend">${items.map(i=>`<li><span class="swatch" style="background:${i.color}"></span>${i.label}</li>`).join("")}</ul>`}
+function statusDonutHtml(week){
+  const segs=[{v:week.present,c:"var(--present)"},{v:week.absent,c:"var(--absent)"},{v:week.unmarked,c:"#cfc6b0"}];
+  const total=Math.max(week.total,1), r=54, circ=2*Math.PI*r; let off=0;
+  const circles=segs.map(s=>{const len=(s.v/total)*circ; const el=`<circle cx="70" cy="70" r="${r}" fill="none" stroke="${s.c}" stroke-width="16" stroke-dasharray="${len} ${circ-len}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)"/>`; off+=len; return el;}).join("");
+  return `<div class="chart-panel"><div class="chart-panel-head"><h3>This week’s mix</h3><p>Present, absent, and not yet marked</p></div>
+    <div class="donut-wrap"><svg viewBox="0 0 140 140" class="donut-chart"><circle cx="70" cy="70" r="${r}" fill="none" stroke="#efe9d8" stroke-width="16"/>${circles}</svg>
+    <div class="donut-center"><strong>${week.rate}%</strong><span>rate</span></div></div>
+    ${legendHtml([{color:"var(--present)",label:`Present · ${week.present}`},{color:"var(--absent)",label:`Absent · ${week.absent}`},{color:"#cfc6b0",label:`Unmarked · ${week.unmarked}`}])}</div>`;
+}
+function submissionGaugeHtml(week){
+  const pct=week.totalGroups?Math.round(week.submittedGroups/week.totalGroups*100):0;
+  const r=48, circ=2*Math.PI*r, filled=(pct/100)*circ;
+  return `<div class="chart-panel"><div class="chart-panel-head"><h3>Submissions</h3><p>Leaders finished for this week</p></div>
+    <div class="donut-wrap compact"><svg viewBox="0 0 120 120" class="donut-chart"><circle cx="60" cy="60" r="${r}" fill="none" stroke="#efe9d8" stroke-width="12"/>
+    <circle cx="60" cy="60" r="${r}" fill="none" stroke="var(--gold)" stroke-width="12" stroke-dasharray="${filled} ${circ-filled}" stroke-linecap="round" transform="rotate(-90 60 60)"/></svg>
+    <div class="donut-center"><strong>${week.submittedGroups}/${week.totalGroups}</strong><span>${pct}%</span></div></div></div>`;
+}
+function trendChartHtml(weeks){
+  const width=320,height=160,padX=28,padY=18,innerW=width-padX*2,innerH=height-padY*2;
+  if(!weeks.length) return `<div class="chart-panel"><div class="chart-panel-head"><h3>Attendance trend</h3><p>Weekly rate across recent weeks</p></div><p class="chart-empty">No week history yet.</p></div>`;
+  const pts=weeks.map((week,i)=>{const x=weeks.length<=1?padX+innerW/2:padX+(i/(weeks.length-1))*innerW; const y=padY+innerH-(week.rate/100)*innerH; return {x,y,week};});
+  const line=pts.map(p=>`${p.x},${p.y}`).join(" ");
+  const area=`${padX},${padY+innerH} ${line} ${padX+innerW},${padY+innerH}`;
+  const grid=[0,25,50,75,100].map(t=>{const y=padY+innerH-(t/100)*innerH; return `<line x1="${padX}" y1="${y}" x2="${padX+innerW}" y2="${y}" class="chart-gridline"/><text x="4" y="${y+3}" class="chart-axis">${t}</text>`;}).join("");
+  const dots=pts.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="4.5" class="trend-dot"/><text x="${p.x}" y="${height-2}" text-anchor="middle" class="chart-axis">${shortDate(p.week.date)}</text>`).join("");
+  return `<div class="chart-panel"><div class="chart-panel-head"><h3>Attendance trend</h3><p>Weekly rate across recent weeks</p></div>
+    <svg viewBox="0 0 ${width} ${height}" class="trend-chart">${grid}<polygon points="${area}" class="trend-area"/><polyline points="${line}" class="trend-line"/>${dots}</svg>
+    ${legendHtml([{color:"var(--forest)",label:"Attendance rate %"}])}</div>`;
+}
+function leaderCompareHtml(groups){
+  const max=Math.max(1,...groups.map(r=>Math.max(r.present+r.absent+r.unmarked,1)));
+  const cols=groups.map(row=>{
+    const ph=(row.present/max)*100, ah=(row.absent/max)*100, uh=(row.unmarked/max)*100;
+    return `<button type="button" class="compare-col" data-open="${esc(row.group)}"><div class="compare-bars"><span class="stack present" style="height:${ph}%"></span><span class="stack absent" style="height:${ah}%"></span><span class="stack unmarked" style="height:${uh}%"></span></div><strong>${row.rate}%</strong><em>${esc(row.label)}</em></button>`;
+  }).join("");
+  return `<div class="chart-panel wide"><div class="chart-panel-head"><h3>Leaders compared</h3><p>Present vs absent vs unmarked this week</p></div><div class="compare-chart">${cols}</div>
+    ${legendHtml([{color:"var(--present)",label:"Present"},{color:"var(--absent)",label:"Absent"},{color:"#cfc6b0",label:"Unmarked"}])}</div>`;
+}
+function icuChartHtml(groups){
+  const total=groups.reduce((s,r)=>s+r.icu,0); const max=Math.max(1,...groups.map(r=>r.icu));
+  if(!total) return `<div class="chart-panel wide"><div class="chart-panel-head"><h3>ICU by leader</h3><p>No one in ICU right now</p></div><p class="chart-empty">ICU is empty across all groups.</p></div>`;
+  const rows=groups.filter(r=>r.icu>0).map(r=>`<div class="icu-bar-row"><span class="icu-bar-label">${esc(r.label)}</span><div class="icu-bar-track"><span class="icu-bar-fill" style="width:${(r.icu/max)*100}%"></span></div><strong>${r.icu}</strong></div>`).join("");
+  return `<div class="chart-panel wide"><div class="chart-panel-head"><h3>ICU by leader</h3><p>${total} member${total===1?"":"s"} set aside for follow-up</p></div><div class="icu-bars">${rows}</div></div>`;
+}
+function chartsHtml(a){
+  return `<div class="chart-grid">${statusDonutHtml(a.thisWeek)}${submissionGaugeHtml(a.thisWeek)}${trendChartHtml(a.trendWeeks)}${leaderCompareHtml(a.byGroup)}${icuChartHtml(a.byGroup)}</div>`;
+}
+function overviewSparkHtml(groups){
+  const items=groups.map(r=>`<button type="button" class="spark-item" data-open="${esc(r.group)}"><div class="spark-track"><span style="height:${Math.max(r.rate,4)}%"></span></div><em>${esc(r.label)}</em><strong>${r.rate}%</strong></button>`).join("");
+  return `<div class="overview-spark wrap"><div class="chart-panel-head"><h3>Week at a glance</h3><p>Tap a leader bar to open their group</p></div><div class="spark-row">${items}</div></div>`;
+}
+
 function renderDashboard(){
   const a=buildAnalytics(), w=a.thisWeek;
   const byGroup=a.byGroup.map(row=>`<div class="analytics-row"><div class="analytics-row-main"><button type="button" class="linkish" data-open="${esc(row.group)}">${esc(row.label)}</button>
-    <span class="muted">${row.members} members · ${row.present} present · ${row.absent} absent${row.submitted?" · submitted":""}</span></div>
+    <span class="muted">${row.members} active${row.icu?` · ${row.icu} ICU`:""} · ${row.present} present · ${row.absent} absent${row.submitted?" · submitted":""}</span></div>
     <div class="rate-bar"><span style="width:${row.rate}%"></span><em>${row.rate}%</em></div></div>`).join("");
   const weeks=a.recentWeeks.map(week=>`<div class="analytics-row"><div class="analytics-row-main"><strong>${week.date}</strong>
     <span class="muted">${week.present} present · ${week.absent} absent · ${week.submittedGroups}/${week.totalGroups} submitted</span></div>
@@ -545,6 +649,8 @@ function renderDashboard(){
       <div class="date-row"><label for="dashDate">Week of</label><input id="dashDate" type="date" value="${currentDate}"></div></div></header>
     <div class="stat-strip">
       <div class="stat-card highlight"><span class="stat-label">Total members</span><strong>${a.totalMembers}</strong></div>
+      <div class="stat-card"><span class="stat-label">Active</span><strong>${a.totalActive}</strong></div>
+      <div class="stat-card"><span class="stat-label">ICU</span><strong>${a.totalIcu}</strong></div>
       <div class="stat-card"><span class="stat-label">Leaders</span><strong>${a.totalLeaders}</strong></div>
       <div class="stat-card"><span class="stat-label">Present this week</span><strong>${w.present}</strong></div>
       <div class="stat-card"><span class="stat-label">Attendance rate</span><strong>${w.rate}%</strong></div>
@@ -552,6 +658,7 @@ function renderDashboard(){
       <div class="stat-card"><span class="stat-label">Submissions</span><strong>${w.submittedGroups}/${w.totalGroups}</strong></div>
     </div>
     <main>
+      ${chartsHtml(a)}
       <section class="group"><div class="group-head static"><h2>By leader this week</h2></div><div class="group-body">${byGroup}</div></section>
       <section class="group"><div class="group-head static"><h2>Recent weeks</h2></div><div class="group-body">${weeks}</div></section>
     </main>`;
@@ -559,9 +666,8 @@ function renderDashboard(){
   document.getElementById("dashDate").onchange=e=>{currentDate=e.target.value; render()};
   app.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openLeader(b.getAttribute("data-open")));
 }
-
 function renderOverview(){
-  const r=activeRoster(); const total=countRoster(r);
+  const r=activeRoster(); const total=countRoster(r); const a=buildAnalytics();
   const sections=Object.entries(r).map(([group,rec])=>{
     const counts=countGroup(group); const sub=getSub(group,currentDate);
     const photos=((sub&&sub.images)||[]).map(img=>`<figure class="photo-tile"><img src="${img.dataUrl}" alt="${esc(img.name)}"></figure>`).join("");
@@ -575,13 +681,14 @@ function renderOverview(){
     <header><div class="header-inner"><div><button type="button" class="back-link" id="backHome">← Leaders</button>
       <h1>All <span>Groups</span></h1></div>
       <div class="date-row"><label for="overviewDate">Week of</label><input id="overviewDate" type="date" value="${currentDate}"></div></div></header>
-    <div class="total-banner"><div><span class="total-label">Total members</span><strong class="total-number">${total}</strong></div></div>
+    <div class="total-banner"><div><span class="total-label">Total members</span><strong class="total-number">${total}</strong></div>
+      <div class="total-meta">${a.totalActive} active · ${a.totalIcu} ICU · week of ${currentDate}</div></div>
+    ${overviewSparkHtml(a.byGroup)}
     <main>${sections}</main>`;
   document.getElementById("backHome").onclick=goHome;
   document.getElementById("overviewDate").onchange=e=>{currentDate=e.target.value; render()};
   app.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openLeader(b.getAttribute("data-open")));
 }
-
 function render(){ if(view==="leader"&&activeGroup) renderLeader(); else if(view==="overview") renderOverview(); else if(view==="dashboard") renderDashboard(); else renderHome(); }
 
 async function boot(){

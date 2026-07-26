@@ -230,6 +230,7 @@ export type GroupAnalytics = {
   group: string;
   label: string;
   members: number;
+  icu: number;
   present: number;
   absent: number;
   unmarked: number;
@@ -251,10 +252,14 @@ export type WeekAnalytics = {
 
 export type AttendanceAnalytics = {
   totalMembers: number;
+  totalActive: number;
+  totalIcu: number;
   totalLeaders: number;
   thisWeek: WeekAnalytics;
   byGroup: GroupAnalytics[];
   recentWeeks: WeekAnalytics[];
+  /** Oldest → newest, for trend charts */
+  trendWeeks: WeekAnalytics[];
   averageRate: number;
 };
 
@@ -436,6 +441,8 @@ export function buildAnalytics(
   currentDate: string,
 ): AttendanceAnalytics {
   const totalMembers = countRoster(roster);
+  const totalActive = countActiveMembers(roster);
+  const totalIcu = Math.max(totalMembers - totalActive, 0);
   const totalLeaders = Object.keys(roster).length;
   const day = state[currentDate] || {};
   const totals = dayTotals(roster, day);
@@ -445,7 +452,9 @@ export function buildAnalytics(
     ([group, record]) => {
       let present = 0;
       let absent = 0;
-      for (const member of record.members || []) {
+      const members = record.members || [];
+      const icu = (record.icu || []).length;
+      for (const member of members) {
         const status = day[personKey(group, member.name)];
         if (status === "present") present += 1;
         if (status === "absent") absent += 1;
@@ -456,10 +465,11 @@ export function buildAnalytics(
       return {
         group,
         label: leaderLabel(group),
-        members: record.members.length,
+        members: members.length,
+        icu,
         present,
         absent,
-        unmarked: Math.max(record.members.length - present - absent, 0),
+        unmarked: Math.max(members.length - present - absent, 0),
         rate: marked ? Math.round((present / marked) * 100) : 0,
         submitted: Boolean(sub?.submittedAt),
         photos: sub?.images.length || 0,
@@ -491,6 +501,8 @@ export function buildAnalytics(
       };
     });
 
+  const trendWeeks = [...recentWeeks].reverse();
+
   const weeksWithMarks = recentWeeks.filter(
     (week) => week.present + week.absent > 0,
   );
@@ -503,6 +515,8 @@ export function buildAnalytics(
 
   return {
     totalMembers,
+    totalActive,
+    totalIcu,
     totalLeaders,
     thisWeek: {
       date: currentDate,
@@ -512,6 +526,7 @@ export function buildAnalytics(
     },
     byGroup,
     recentWeeks,
+    trendWeeks,
     averageRate,
   };
 }

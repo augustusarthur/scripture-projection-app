@@ -869,6 +869,340 @@
   color: white;
 }
 
+.attendance-app .chart-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.attendance-app .chart-panel {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 14px 14px;
+  min-width: 0;
+}
+
+.attendance-app .chart-panel.wide {
+  grid-column: 1 / -1;
+}
+
+.attendance-app .chart-panel-head h3 {
+  margin: 0 0 4px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 17px;
+  color: var(--forest-deep);
+}
+
+.attendance-app .chart-panel-head p {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.attendance-app .chart-empty {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13.5px;
+}
+
+.attendance-app .chart-legend {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.attendance-app .chart-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.attendance-app .chart-legend .swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.attendance-app .donut-wrap {
+  position: relative;
+  width: min(180px, 100%);
+  margin: 0 auto;
+}
+
+.attendance-app .donut-wrap.compact {
+  width: min(150px, 100%);
+}
+
+.attendance-app .donut-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.attendance-app .donut-segment {
+  animation: chart-draw 0.7s ease-out both;
+}
+
+.attendance-app .donut-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.attendance-app .donut-center strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 26px;
+  line-height: 1;
+  color: var(--forest-deep);
+}
+
+.attendance-app .donut-center span {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.attendance-app .trend-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.attendance-app .chart-gridline {
+  stroke: #efe9d8;
+  stroke-width: 1;
+}
+
+.attendance-app .chart-axis {
+  fill: var(--muted);
+  font-size: 9px;
+}
+
+.attendance-app .trend-area {
+  fill: rgba(44, 74, 59, 0.14);
+  animation: chart-fade 0.6s ease-out both;
+}
+
+.attendance-app .trend-line {
+  fill: none;
+  stroke: var(--forest);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  animation: chart-draw 0.8s ease-out both;
+}
+
+.attendance-app .trend-dot {
+  fill: var(--gold);
+  stroke: var(--forest-deep);
+  stroke-width: 1.5;
+}
+
+.attendance-app .compare-chart {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
+  gap: 8px;
+  align-items: end;
+  min-height: 180px;
+}
+
+.attendance-app .compare-col {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  color: inherit;
+  min-width: 0;
+}
+
+.attendance-app .compare-bars {
+  width: 100%;
+  max-width: 42px;
+  height: 140px;
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  padding: 0 2px;
+}
+
+.attendance-app .compare-bars .stack {
+  flex: 1;
+  border-radius: 4px 4px 0 0;
+  min-height: 2px;
+  transition: height 0.45s ease;
+}
+
+.attendance-app .compare-bars .stack.present {
+  background: linear-gradient(180deg, #3d6a54, var(--present));
+}
+
+.attendance-app .compare-bars .stack.absent {
+  background: linear-gradient(180deg, #d07a66, var(--absent));
+}
+
+.attendance-app .compare-bars .stack.unmarked {
+  background: #cfc6b0;
+}
+
+.attendance-app .compare-col strong {
+  font-size: 12px;
+  color: var(--forest-deep);
+}
+
+.attendance-app .compare-col em {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--muted);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attendance-app .icu-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.attendance-app .icu-bar-row {
+  display: grid;
+  grid-template-columns: 90px 1fr 28px;
+  gap: 10px;
+  align-items: center;
+}
+
+.attendance-app .icu-bar-label {
+  font-size: 13px;
+  color: var(--forest-deep);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attendance-app .icu-bar-track {
+  height: 12px;
+  background: #f3e4df;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.attendance-app .icu-bar-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #c56b57, var(--absent));
+  border-radius: inherit;
+  transition: width 0.45s ease;
+}
+
+.attendance-app .icu-bar-row strong {
+  font-size: 13px;
+  color: var(--absent);
+  text-align: right;
+}
+
+.attendance-app .overview-charts {
+  max-width: 880px;
+  margin: 14px auto 0;
+  padding: 0 24px;
+}
+
+.attendance-app .overview-spark {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 14px;
+}
+
+.attendance-app .spark-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+  gap: 10px;
+}
+
+.attendance-app .spark-item {
+  border: none;
+  background: transparent;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  color: inherit;
+}
+
+.attendance-app .spark-track {
+  width: 28px;
+  height: 72px;
+  background: #efe9d8;
+  border-radius: 8px;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+
+.attendance-app .spark-track span {
+  display: block;
+  width: 100%;
+  background: linear-gradient(180deg, #3d6a54, var(--forest));
+  border-radius: 8px 8px 0 0;
+  transition: height 0.45s ease;
+  min-height: 4%;
+}
+
+.attendance-app .spark-item em {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--muted);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attendance-app .spark-item strong {
+  font-size: 12px;
+  color: var(--forest-deep);
+}
+
+@keyframes chart-draw {
+  from {
+    opacity: 0.2;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes chart-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @media (max-width: 640px) {
   .attendance-app .person-row {
     flex-direction: column;
@@ -882,5 +1216,13 @@
   .attendance-app .toggle-btn {
     flex: 1;
     text-align: center;
+  }
+
+  .attendance-app .chart-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .attendance-app .icu-bar-row {
+    grid-template-columns: 70px 1fr 24px;
   }
 }
