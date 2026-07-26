@@ -318,23 +318,42 @@ function removePerson(g,name){
   Object.keys(state).forEach(d=>{if(state[d])delete state[d][key]});
   flash("Member removed — tap Save to sync"); render();
 }
-function movePerson(fromGroup,name,toGroup){
-  if(!editing||!draftRoster) return flash("Turn on Edit mode first");
+function findMemberAnywhere(groupRec,name){
+  const active=(groupRec.members||[]).find(m=>m.name===name);
+  if(active) return {member:active, from:"members"};
+  const icu=(groupRec.icu||[]).find(m=>m.name===name);
+  if(icu) return {member:icu, from:"icu"};
+  return null;
+}
+async function movePerson(fromGroup,name,toGroup){
   if(!toGroup||toGroup===fromGroup) return flash("Choose a different leader");
-  const from=draftRoster[fromGroup], to=draftRoster[toGroup];
+  const src=activeRoster();
+  const from=src[fromGroup], to=src[toGroup];
   if(!from||!to) return flash("Could not move member");
-  const member=(from.members||[]).find(m=>m.name===name);
-  if(!member) return flash("Member not found");
-  if((to.members||[]).some(m=>m.name.toLowerCase()===name.toLowerCase())) return flash("Already in that group");
-  draftRoster[fromGroup]={...from, members:(from.members||[]).filter(m=>m.name!==name)};
-  draftRoster[toGroup]={...to, members:(to.members||[]).concat([{...member}])};
+  const found=findMemberAnywhere(from,name);
+  if(!found) return flash("Member not found");
+  if((to.members||[]).some(m=>m.name.toLowerCase()===name.toLowerCase())||(to.icu||[]).some(m=>m.name.toLowerCase()===name.toLowerCase()))
+    return flash("Already in that group");
+  const next=structuredClone(src);
+  next[fromGroup]={...from,
+    members:found.from==="members"?(from.members||[]).filter(m=>m.name!==name):(from.members||[]),
+    icu:found.from==="icu"?(from.icu||[]).filter(m=>m.name!==name):(from.icu||[])
+  };
+  next[toGroup]={...to, members:[...(to.members||[]), {...found.member}], icu:to.icu||[]};
   const fromKey=personKey(fromGroup,name), toKey=personKey(toGroup,name);
   Object.keys(state).forEach(d=>{
     const day=state[d]; if(!day||!day[fromKey]) return;
     if(!day[toKey]) day[toKey]=day[fromKey];
     delete day[fromKey];
   });
-  flash("Moved "+name+" — tap Save to sync"); render();
+  if(editing){ draftRoster=next; flash("Moved "+name+" — tap Save to sync"); render(); return; }
+  roster=next; persistLocal();
+  try{
+    syncId=await saveCloud(syncId,{version:2,roster,attendance:state,submissions,updatedAt:new Date().toISOString()});
+    lastSyncedAt=new Date().toISOString(); setSyncInUrl(syncId); persistLocal();
+    flash("Moved "+name+" to "+leaderLabel(toGroup));
+  }catch{ flash("Moved "+name+" (saved on this phone — Sync failed)"); }
+  render();
 }
 
 async function applyRosterChange(next, okMsg, editMsg){
@@ -489,11 +508,11 @@ function renderLeader(){
           <button type="button" class="toggle-btn absent${current==="absent"?" active":""}" data-name="${esc(m.name)}" data-val="absent">Absent</button>
         </span>
         <button type="button" class="icu-btn" data-to-icu="${esc(m.name)}">To ICU</button>
-        ${editing?`<label class="move-control">
-          <select data-move-select="${esc(m.name)}"><option value="">Move to…</option>${moveOptions}</select>
+        <label class="move-control">
+          <select data-move-select="${esc(m.name)}"><option value="">Move to leader…</option>${moveOptions}</select>
           <button type="button" class="move-btn" data-move-member="${esc(m.name)}">Move</button>
         </label>
-        <button type="button" class="remove-btn" data-remove-member="${esc(m.name)}">Remove</button>`:""}
+        ${editing?`<button type="button" class="remove-btn" data-remove-member="${esc(m.name)}">Remove</button>`:""}
       </div></div>`;
   }).join("");
   const photos=images.map(img=>`<figure class="photo-tile"><img src="${img.dataUrl}" alt="${esc(img.name)}"><button type="button" class="photo-remove" data-remove="${esc(img.id)}">Remove</button></figure>`).join("");
@@ -504,7 +523,7 @@ function renderLeader(){
     ${modeBar()}
     <div class="summary-bar">
       <div>Members: <b>${counts.total}</b></div><div>Present: <b>${counts.present}</b></div>
-      <div>Absent: <b>${counts.absent}</b></div><div>Photos: <b>${images.length}</b></div>
+      <div>Absent: <b>${counts.absent}</b></div><div>ICU: <b>${((r[activeGroup]&&r[activeGroup].icu)||[]).length}</b></div><div>Photos: <b>${images.length}</b></div>
     </div>
     <div class="actions">
       <button type="button" id="submitBtn">${submittedAt?"Update submission":"Submit this week"}</button>
@@ -520,16 +539,19 @@ function renderLeader(){
             `<span class="phone-line">${leaderPhone?("☎ "+esc(leaderPhone)):"No phone saved"}</span>`}
         </div></section>
       <section class="group"><div class="group-head static"><h2>Members & attendance</h2><span class="group-count">${people.length}</span></div>
-        <div class="group-body">${rows}
+        <div class="group-body"><p class="photo-hint">Use <b>Move to leader…</b> to switch groups. Tap <b>To ICU</b> for long absences — the ICU list is in the next section below.</p>${rows}
           ${editing?`<div class="add-row">
             <input id="newName" type="text" placeholder="Member name">
             <input id="newPhone" type="tel" placeholder="Phone">
             <button type="button" id="addName">Add member</button>
           </div>`:""}
         </div></section>
-      <section class="group icu-section"><div class="group-head static"><h2>ICU</h2><span class="group-count">${((r[activeGroup]&&r[activeGroup].icu)||[]).length}</span></div>
-        <div class="group-body"><p class="photo-hint">Move members here when they have been absent for a while. This is a manual leader action.</p>
-          ${(((r[activeGroup]&&r[activeGroup].icu)||[]).length)?((r[activeGroup].icu||[]).map(m=>`<div class="person-row"><div class="person-main"><span class="person-name">${esc(m.name)}</span>${m.phone?`<span class="person-phone">☎ ${esc(m.phone)}</span>`:""}</div><div class="person-actions"><button type="button" class="icu-btn restore" data-restore-icu="${esc(m.name)}">Restore</button></div></div>`).join("")):`<p class="photo-empty">No one in ICU right now.</p>`}
+      <section class="group icu-section" id="icu-section"><div class="group-head static"><h2>ICU — long absences</h2><span class="group-count">${((r[activeGroup]&&r[activeGroup].icu)||[]).length}</span></div>
+        <div class="group-body"><p class="photo-hint">This leader’s ICU list. Tap <b>To ICU</b> on an active member above to add them here. Restore brings them back to attendance.</p>
+          ${(((r[activeGroup]&&r[activeGroup].icu)||[]).length)?((r[activeGroup].icu||[]).map(m=>{
+            const moveOptionsIcu=otherGroups.map(g=>`<option value="${esc(g)}">${esc(leaderLabel(g))}</option>`).join("");
+            return `<div class="person-row"><div class="person-main"><span class="person-name">${esc(m.name)}</span>${m.phone?`<span class="person-phone">☎ ${esc(m.phone)}</span>`:""}</div><div class="person-actions"><button type="button" class="icu-btn restore" data-restore-icu="${esc(m.name)}">Restore</button><label class="move-control"><select data-move-select="${esc(m.name)}"><option value="">Move to leader…</option>${moveOptionsIcu}</select><button type="button" class="move-btn" data-move-member="${esc(m.name)}">Move</button></label></div></div>`;
+          }).join("")):`<p class="photo-empty">No one in ICU right now.</p>`}
         </div></section>
       <section class="group"><div class="group-head static"><h2>Weekly photos</h2><span class="group-count">${images.length}/${MAX_IMAGES}</span></div>
         <div class="group-body photo-body">

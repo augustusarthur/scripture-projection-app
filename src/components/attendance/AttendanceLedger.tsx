@@ -486,30 +486,81 @@ export function AttendanceLedger() {
     flash("Member removed — tap Save to sync");
   }
 
-  function movePerson(fromGroup: string, name: string, toGroup: string) {
-    if (!editing || !draftRoster) {
-      flash("Turn on Edit mode first");
-      return;
-    }
+  async function movePerson(fromGroup: string, name: string, toGroup: string) {
     if (!toGroup || toGroup === fromGroup) {
       flash("Choose a different leader");
       return;
     }
-    const moved = moveMemberInRoster(draftRoster, fromGroup, toGroup, name);
+    const source = editing && draftRoster ? draftRoster : roster;
+    const moved = moveMemberInRoster(source, fromGroup, toGroup, name);
     if (!moved) {
       flash("Could not move — already in that group?");
       return;
     }
-    setDraftRoster(moved);
-    setState((prev) =>
-      remapsAttendanceForMove(prev, fromGroup, toGroup, name),
+    const nextState = remapsAttendanceForMove(
+      state,
+      fromGroup,
+      toGroup,
+      name,
     );
     setMoveTargets((prev) => {
       const copy = { ...prev };
       delete copy[`${fromGroup}|${name}`];
       return copy;
     });
-    flash(`Moved ${name} — tap Save to sync`);
+    setState(nextState);
+    if (editing) {
+      setDraftRoster(moved);
+      flash(`Moved ${name} — tap Save to sync`);
+      return;
+    }
+    setRoster(moved);
+    try {
+      const savedId = await saveCloudSync(syncId, {
+        roster: moved,
+        attendance: nextState,
+        submissions,
+      });
+      setSyncId(savedId);
+      setSyncInUrl(savedId);
+      flash(`Moved ${name} to ${leaderLabel(toGroup)}`);
+    } catch {
+      flash(`Moved ${name} (saved on this phone — Sync failed)`);
+    }
+  }
+
+  function moveControl(group: string, name: string) {
+    const key = `${group}|${name}`;
+    return (
+      <label className="move-control">
+        <span className="sr-only">Move {name}</span>
+        <select
+          value={moveTargets[key] || ""}
+          onChange={(event) =>
+            setMoveTargets((prev) => ({
+              ...prev,
+              [key]: event.target.value,
+            }))
+          }
+        >
+          <option value="">Move to leader…</option>
+          {Object.keys(activeRoster)
+            .filter((other) => other !== group)
+            .map((other) => (
+              <option key={other} value={other}>
+                {leaderLabel(other)}
+              </option>
+            ))}
+        </select>
+        <button
+          type="button"
+          className="secondary move-btn"
+          onClick={() => movePerson(group, name, moveTargets[key] || "")}
+        >
+          Move
+        </button>
+      </label>
+    );
   }
 
   async function applyRosterChange(
@@ -1064,7 +1115,7 @@ export function AttendanceLedger() {
             Absent: <b>{leaderCounts.absent}</b>
           </div>
           <div>
-            Not marked: <b>{leaderCounts.unmarked}</b>
+            ICU: <b>{icuMembers.length}</b>
           </div>
           <div>
             Photos: <b>{images.length}</b>
@@ -1130,6 +1181,10 @@ export function AttendanceLedger() {
               <span className="group-count">{activeMembers.length}</span>
             </div>
             <div className="group-body">
+              <p className="photo-hint">
+                Use <b>Move to leader…</b> to switch groups. Tap <b>To ICU</b>{" "}
+                for long absences — the ICU list is in the next section below.
+              </p>
               {activeMembers.map((member) => {
                 const key = personKey(activeGroup, member.name);
                 const current = dayState[key];
@@ -1183,58 +1238,17 @@ export function AttendanceLedger() {
                       >
                         To ICU
                       </button>
+                      {moveControl(activeGroup, member.name)}
                       {editing ? (
-                        <>
-                          <label className="move-control">
-                            <span className="sr-only">Move {member.name}</span>
-                            <select
-                              value={
-                                moveTargets[`${activeGroup}|${member.name}`] ||
-                                ""
-                              }
-                              onChange={(event) =>
-                                setMoveTargets((prev) => ({
-                                  ...prev,
-                                  [`${activeGroup}|${member.name}`]:
-                                    event.target.value,
-                                }))
-                              }
-                            >
-                              <option value="">Move to…</option>
-                              {Object.keys(activeRoster)
-                                .filter((group) => group !== activeGroup)
-                                .map((group) => (
-                                  <option key={group} value={group}>
-                                    {leaderLabel(group)}
-                                  </option>
-                                ))}
-                            </select>
-                            <button
-                              type="button"
-                              className="secondary move-btn"
-                              onClick={() =>
-                                movePerson(
-                                  activeGroup,
-                                  member.name,
-                                  moveTargets[
-                                    `${activeGroup}|${member.name}`
-                                  ] || "",
-                                )
-                              }
-                            >
-                              Move
-                            </button>
-                          </label>
-                          <button
-                            type="button"
-                            className="remove-btn"
-                            onClick={() =>
-                              removePerson(activeGroup, member.name)
-                            }
-                          >
-                            Remove
-                          </button>
-                        </>
+                        <button
+                          type="button"
+                          className="remove-btn"
+                          onClick={() =>
+                            removePerson(activeGroup, member.name)
+                          }
+                        >
+                          Remove
+                        </button>
                       ) : null}
                     </div>
                   </div>
@@ -1290,15 +1304,15 @@ export function AttendanceLedger() {
             </div>
           </section>
 
-          <section className="group icu-section">
+          <section className="group icu-section" id="icu-section">
             <div className="group-head static">
-              <h2>ICU</h2>
+              <h2>ICU — long absences</h2>
               <span className="group-count">{icuMembers.length}</span>
             </div>
             <div className="group-body">
               <p className="photo-hint">
-                Move members here when they have been absent for a while. This is
-                a manual leader action.
+                This leader’s ICU list. Tap <b>To ICU</b> on an active member
+                above to add them here. Restore brings them back to attendance.
               </p>
               {icuMembers.length === 0 ? (
                 <p className="photo-empty">No one in ICU right now.</p>
@@ -1319,6 +1333,7 @@ export function AttendanceLedger() {
                       >
                         Restore
                       </button>
+                      {moveControl(activeGroup, member.name)}
                     </div>
                   </div>
                 ))
