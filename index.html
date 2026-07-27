@@ -2,19 +2,28 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Attendance Ledger</title>
+<meta name="description" content="First Love Church small-group attendance for leaders">
+<meta name="theme-color" content="#1a3327">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Attendance">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
 <style>
 :root{--ink:#1f2a24;--paper:#f6f3ea;--card:#fff;--forest:#2c4a3b;--forest-deep:#1a3327;--gold:#c8952f;--gold-soft:#f0deb3;--line:#d9d2bd;--muted:#7c7568;--present:#2c4a3b;--absent:#b6503a}
 *{box-sizing:border-box}
-body{margin:0;background:radial-gradient(ellipse 80% 50% at 10% -10%,rgba(240,222,179,.55),transparent 55%),radial-gradient(ellipse 60% 40% at 100% 0%,rgba(44,74,59,.08),transparent 50%),var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;padding:0 0 60px;min-height:100vh}
-header{background:linear-gradient(160deg,var(--forest-deep),#243f32);color:var(--paper);padding:28px 24px 22px;position:sticky;top:0;z-index:10;box-shadow:0 4px 14px rgba(0,0,0,.15)}
+body{margin:0;background:radial-gradient(ellipse 80% 50% at 10% -10%,rgba(240,222,179,.55),transparent 55%),radial-gradient(ellipse 60% 40% at 100% 0%,rgba(44,74,59,.08),transparent 50%),var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;padding:0 0 calc(60px + env(safe-area-inset-bottom));min-height:100vh;min-height:100dvh}
+header{background:linear-gradient(160deg,var(--forest-deep),#243f32);color:var(--paper);padding:calc(28px + env(safe-area-inset-top)) 24px 22px;position:sticky;top:0;z-index:10;box-shadow:0 4px 14px rgba(0,0,0,.15)}
 .header-inner{max-width:880px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px}
 h1{font-family:Georgia,serif;font-size:26px;margin:0}h1 span{color:var(--gold-soft);font-style:italic}
 .date-row{display:flex;align-items:center;gap:10px}.date-row label{font-size:13px;color:var(--gold-soft)}
 .date-row input[type=date]{background:var(--forest);border:1px solid var(--gold);color:var(--paper);padding:7px 10px;border-radius:6px;font-size:14px}
 .back-link{background:transparent;border:none;color:var(--gold-soft);font-size:13px;padding:0;margin-bottom:6px;cursor:pointer;display:block}
-.wrap,.total-banner,.stat-strip,.manage-panel,.hero-copy,.summary-bar,.actions,.status-msg,main{max-width:880px;margin-left:auto;margin-right:auto;padding-left:24px;padding-right:24px}
+.wrap,.total-banner,.stat-strip,.manage-panel,.hero-copy,.install-tip,.summary-bar,.actions,.status-msg,main{max-width:880px;margin-left:auto;margin-right:auto;padding-left:24px;padding-right:24px}
 .total-banner{margin-top:18px;padding:16px 20px;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px;background:linear-gradient(135deg,#243f32,var(--forest-deep));color:var(--paper);border-radius:12px}
 .total-label{display:block;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--gold-soft);margin-bottom:4px}
 .total-number{font-family:Georgia,serif;font-size:40px;line-height:1}
@@ -60,6 +69,9 @@ main{margin-top:18px;padding-bottom:24px}
 .move-control{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .move-control select{border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:12.5px;background:#fff;color:var(--ink);max-width:160px}
 .move-btn{background:#fff!important;color:var(--forest-deep)!important;border:1px solid var(--line)!important;padding:6px 10px!important;font-size:12.5px!important}
+.icu-section .group-head.static{background:#f0d9d4}
+.icu-btn{border:1px solid #e2b4aa;background:#fff7f5;color:var(--absent);border-radius:6px;padding:6px 10px;font-size:12.5px;cursor:pointer}
+.icu-btn.restore{border-color:var(--forest);background:#eef5f0;color:var(--forest-deep)}
 .add-row{display:flex;gap:8px;padding:10px;border-top:1px solid #f0ede1;flex-wrap:wrap}
 .notes-input{width:100%;min-height:84px;resize:vertical}
 .photo-body{padding:14px}.photo-hint,.photo-empty,.notes-preview{margin:0 0 12px;color:var(--muted);font-size:13.5px}
@@ -84,21 +96,76 @@ main{margin-top:18px;padding-bottom:24px}
 .rate-bar em{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-style:normal;font-size:12px;font-weight:600;color:var(--forest-deep)}
 .share-box{margin-top:12px;padding:12px;border:1px dashed var(--line);border-radius:10px;background:#fff;font-size:13px;color:var(--muted);word-break:break-all}
 .share-box code{color:var(--forest-deep);font-size:12.5px}
+.install-tip{margin:14px auto 0;border-radius:12px;border:1px solid #c7d9ce;background:linear-gradient(180deg,#f3f7f4,#fff);color:var(--forest-deep);font-size:13.5px;line-height:1.45;padding-top:14px;padding-bottom:14px}
+.install-tip h3{margin:0 0 6px;font-family:Georgia,serif;font-size:16px}
+.install-tip ol{margin:8px 0 0;padding-left:1.2rem}
+.install-tip li{margin:4px 0}
+.install-tip .tip-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.install-tip button{background:var(--forest-deep);color:#fff;border:none;padding:8px 12px;border-radius:6px;font-size:13px;cursor:pointer}
+.install-tip button.secondary{background:#fff;color:var(--forest-deep);border:1px solid var(--line)}
+.standalone-hide{display:none!important}
+
+
+.chart-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.chart-panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 14px 14px;min-width:0}
+.chart-panel.wide{grid-column:1/-1}
+.chart-panel-head h3{margin:0 0 4px;font-family:Georgia,serif;font-size:17px;color:var(--forest-deep)}
+.chart-panel-head p{margin:0 0 14px;font-size:12.5px;color:var(--muted)}
+.chart-empty{margin:8px 0 0;color:var(--muted);font-size:13.5px}
+.chart-legend{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:10px 14px;font-size:12px;color:var(--muted)}
+.chart-legend li{display:inline-flex;align-items:center;gap:6px}
+.chart-legend .swatch{width:10px;height:10px;border-radius:2px;display:inline-block}
+.donut-wrap{position:relative;width:min(180px,100%);margin:0 auto}
+.donut-wrap.compact{width:min(150px,100%)}
+.donut-chart{width:100%;height:auto;display:block}
+.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.donut-center strong{font-family:Georgia,serif;font-size:26px;line-height:1;color:var(--forest-deep)}
+.donut-center span{font-size:12px;color:var(--muted);margin-top:4px}
+.trend-chart{width:100%;height:auto;display:block}
+.chart-gridline{stroke:#efe9d8;stroke-width:1}
+.chart-axis{fill:var(--muted);font-size:9px}
+.trend-area{fill:rgba(44,74,59,.14)}
+.trend-line{fill:none;stroke:var(--forest);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.trend-dot{fill:var(--gold);stroke:var(--forest-deep);stroke-width:1.5}
+.compare-chart{display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr));gap:8px;align-items:end;min-height:180px}
+.compare-col{border:none;background:transparent;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font:inherit;color:inherit;min-width:0}
+.compare-bars{width:100%;max-width:42px;height:140px;display:flex;align-items:flex-end;gap:3px;padding:0 2px}
+.compare-bars .stack{flex:1;border-radius:4px 4px 0 0;min-height:2px}
+.compare-bars .stack.present{background:linear-gradient(180deg,#3d6a54,var(--present))}
+.compare-bars .stack.absent{background:linear-gradient(180deg,#d07a66,var(--absent))}
+.compare-bars .stack.unmarked{background:#cfc6b0}
+.compare-col strong{font-size:12px;color:var(--forest-deep)}
+.compare-col em{font-style:normal;font-size:11px;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.icu-bars{display:flex;flex-direction:column;gap:10px}
+.icu-bar-row{display:grid;grid-template-columns:90px 1fr 28px;gap:10px;align-items:center}
+.icu-bar-label{font-size:13px;color:var(--forest-deep);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.icu-bar-track{height:12px;background:#f3e4df;border-radius:999px;overflow:hidden}
+.icu-bar-fill{display:block;height:100%;background:linear-gradient(90deg,#c56b57,var(--absent));border-radius:inherit}
+.icu-bar-row strong{font-size:13px;color:var(--absent);text-align:right}
+.overview-spark{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 14px;margin-top:14px}
+.spark-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:10px}
+.spark-item{border:none;background:transparent;padding:4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font:inherit;color:inherit}
+.spark-track{width:28px;height:72px;background:#efe9d8;border-radius:8px;display:flex;align-items:flex-end;overflow:hidden}
+.spark-track span{display:block;width:100%;background:linear-gradient(180deg,#3d6a54,var(--forest));border-radius:8px 8px 0 0;min-height:4%}
+.spark-item em{font-style:normal;font-size:11px;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.spark-item strong{font-size:12px;color:var(--forest-deep)}
+@media (max-width:640px){.chart-grid{grid-template-columns:1fr}.icu-bar-row{grid-template-columns:70px 1fr 24px}}
 @media (max-width:640px){.person-row{flex-direction:column;align-items:stretch}.toggle-btn{flex:1;text-align:center}}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <script>
-const DEFAULT_SYNC_ID = "019f9be4-bfa4-730d-b396-bdeafbd8cb4a";
+const DEFAULT_SYNC_ID = "019fa12a-e208-7876-b8f3-4f51e32a3093";
 const SYNC_API = "https://jsonblob.com/api/jsonBlob";
 const DEFAULT_ROSTER = {
-  "Aliye's Group": {phone:"", members:["Anthony","Heba","Jeremy","Jordan","Josiah","Odera","Patrick","Tessa","Kokou","Kriti","Adrianna","Judith"].map(n=>({name:n,phone:""}))},
-  "Augustus's Group": {phone:"", members:["Dieumerci","Ashlee","Brian","Furri","Pastor Glodie","Pressley","Terrence","Israel","Gerald","Uyi","Aliye","Chancela","Chidi","Diana","Ephraim","Jeff","Korey","Mama Vivian","Nancy","Shalyne"].map(n=>({name:n,phone:""}))},
-  "Diana's Group": {phone:"", members:["Caleb","Dawit","Ian","Kameron","Lady Nikki","Rehema"].map(n=>({name:n,phone:""}))},
-  "Naa's Group": {phone:"", members:["Chiche","Kriti","Mac Noble","Mya","Tarmadji","Theresa","Treasure"].map(n=>({name:n,phone:""}))},
-  "Shalyne's Group": {phone:"", members:["Eden M","Morris","Talent","Trishana","Vanessa","Dennis","Brian","Douglas","Maru"].map(n=>({name:n,phone:""}))},
-  "Needs a Group": {phone:"", members:["Lucky","Atrel/Joseph","Dezhon","Johan"].map(n=>({name:n,phone:""}))}
+  "Aliye's Group": {phone:"", icu:[], members:["Anthony","Heba","Jeremy","Jordan","Josiah","Odera","Patrick","Tessa","Kokou","Kriti","Adrianna","Judith"].map(n=>({name:n,phone:""}))},
+  "Augustus's Group": {phone:"", icu:[], members:["Dieumerci","Ashlee","Brian","Furri","Pastor Glodie","Pressley","Terrence","Israel","Uyi","Aliye","Chancela","Chidi","Diana","Ephraim","Korey","Mama Vivian","Nancy","Shalyne"].map(n=>({name:n,phone:""}))},
+  "Diana's Group": {phone:"", icu:[], members:["Caleb","Dawit","Ian","Kameron","Lady Nikki","Rehema"].map(n=>({name:n,phone:""}))},
+  "Naa's Group": {phone:"", icu:[], members:["Chiche","Kriti","Mac Noble","Mya","Tarmadji","Treasure"].map(n=>({name:n,phone:""}))},
+  "Shalyne's Group": {phone:"", icu:[], members:["Eden M","Morris","Talent","Trishana","Vanessa","Dennis","Brian","Douglas","Maru"].map(n=>({name:n,phone:""}))},
+  "Felix's Group": {phone:"", icu:[], members:["Gerald","Theresa","Jackson","Cisco","Nancy Twum","Jeff"].map(n=>({name:n,phone:""}))},
+  "Needs a Group": {phone:"", icu:[], members:["Lucky","Atrel/Joseph","Dezhon","Johan"].map(n=>({name:n,phone:""}))}
 };
 const MAX_IMAGES=8;
 let roster=structuredClone(DEFAULT_ROSTER);
@@ -122,17 +189,17 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 function flash(m){statusMsg=m; render(); clearTimeout(statusTimer); statusTimer=setTimeout(()=>{statusMsg=""; render()},2800)}
 function dayState(){return state[currentDate]||{}}
 function getSub(g,d){return submissions[submissionKey(g,d)]||null}
-function countRoster(r){return Object.values(r).reduce((s,g)=>s+(g.members||[]).length,0)}
+function countRoster(r){return Object.values(r).reduce((s,g)=>s+(g.members||[]).length+(g.icu||[]).length,0)}
 function countGroup(g){const people=(activeRoster()[g]?.members)||[]; const day=dayState(); let present=0,absent=0; people.forEach(m=>{const v=day[personKey(g,m.name)]; if(v==="present")present++; if(v==="absent")absent++}); return {present,absent,unmarked:Math.max(people.length-present-absent,0),total:people.length}}
 function groupAttendance(g){const out={}, day=dayState(); ((activeRoster()[g]?.members)||[]).forEach(m=>{const k=personKey(g,m.name); if(day[k])out[k]=day[k]}); return out}
 function normalizeRoster(raw){
   if(!raw||typeof raw!=="object") return structuredClone(DEFAULT_ROSTER);
   const next={};
   Object.entries(raw).forEach(([g,v])=>{
-    if(Array.isArray(v)) next[g]={phone:"", members:v.filter(x=>typeof x==="string").map(n=>({name:n,phone:""}))};
+    if(Array.isArray(v)) next[g]={phone:"", icu:[], members:v.filter(x=>typeof x==="string").map(n=>({name:n,phone:""}))};
     else if(v&&typeof v==="object"){
       const members=Array.isArray(v.members)?v.members:[];
-      next[g]={phone:typeof v.phone==="string"?v.phone:"", members:members.map(item=>{
+      const icu=Array.isArray(v.icu)?v.icu:[]; next[g]={phone:typeof v.phone==="string"?v.phone:"", icu:icu.map(item=>{if(typeof item==="string") return {name:item,phone:""}; if(item&&typeof item==="object"&&typeof item.name==="string") return {name:item.name, phone:typeof item.phone==="string"?item.phone:""}; return null;}).filter(Boolean), members:members.map(item=>{
         if(typeof item==="string") return {name:item,phone:""};
         if(item&&typeof item==="object"&&typeof item.name==="string") return {name:item.name, phone:typeof item.phone==="string"?item.phone:""};
         return null;
@@ -178,14 +245,18 @@ function persistLocal(){
   localStorage.setItem("church-attendance-sync-id-v1", syncId);
 }
 function buildAnalytics(){
-  const r=activeRoster(); const totalMembers=countRoster(r); const totalLeaders=Object.keys(r).length; const day=dayState();
+  const r=activeRoster(); const totalMembers=countRoster(r);
+  const totalActive=Object.values(r).reduce((s,g)=>s+(g.members||[]).length,0);
+  const totalIcu=Math.max(totalMembers-totalActive,0);
+  const totalLeaders=Object.keys(r).length; const day=dayState();
   let present=0,absent=0,total=0,submittedGroups=0;
   const byGroup=Object.entries(r).map(([group,rec])=>{
-    let p=0,a=0; (rec.members||[]).forEach(m=>{const v=day[personKey(group,m.name)]; if(v==="present")p++; if(v==="absent")a++});
-    present+=p; absent+=a; total+=(rec.members||[]).length;
+    let p=0,a=0; const members=rec.members||[]; const icu=(rec.icu||[]).length;
+    members.forEach(m=>{const v=day[personKey(group,m.name)]; if(v==="present")p++; if(v==="absent")a++});
+    present+=p; absent+=a; total+=members.length;
     const sub=getSub(group,currentDate); if(sub&&sub.submittedAt)submittedGroups++;
     const marked=p+a;
-    return {group,label:leaderLabel(group),members:(rec.members||[]).length,present:p,absent:a,unmarked:Math.max((rec.members||[]).length-p-a,0),rate:marked?Math.round(p/marked*100):0,submitted:!!(sub&&sub.submittedAt),photos:(sub&&sub.images&&sub.images.length)||0};
+    return {group,label:leaderLabel(group),members:members.length,icu,present:p,absent:a,unmarked:Math.max(members.length-p-a,0),rate:marked?Math.round(p/marked*100):0,submitted:!!(sub&&sub.submittedAt),photos:(sub&&sub.images&&sub.images.length)||0};
   });
   const unmarked=Math.max(total-present-absent,0), marked=present+absent, rate=marked?Math.round(present/marked*100):0;
   const dates=new Set(Object.keys(state)); Object.keys(submissions).forEach(k=>{const d=k.split("|").pop(); if(d)dates.add(d)}); dates.add(currentDate);
@@ -194,11 +265,11 @@ function buildAnalytics(){
     Object.entries(r).forEach(([g,rec])=>{(rec.members||[]).forEach(m=>{t++; const v=d[personKey(g,m.name)]; if(v==="present")p++; if(v==="absent")a++}); if(getSub(g,date)&&getSub(g,date).submittedAt)sub++});
     const m=p+a; return {date,present:p,absent:a,unmarked:Math.max(t-p-a,0),total:t,rate:m?Math.round(p/m*100):0,submittedGroups:sub,totalGroups:totalLeaders};
   });
+  const trendWeeks=[...recentWeeks].reverse();
   const withMarks=recentWeeks.filter(w=>w.present+w.absent>0);
   const averageRate=withMarks.length?Math.round(withMarks.reduce((s,w)=>s+w.rate,0)/withMarks.length):0;
-  return {totalMembers,totalLeaders,thisWeek:{date:currentDate,present,absent,unmarked,total,rate,submittedGroups,totalGroups:totalLeaders},byGroup,recentWeeks,averageRate};
+  return {totalMembers,totalActive,totalIcu,totalLeaders,thisWeek:{date:currentDate,present,absent,unmarked,total,rate,submittedGroups,totalGroups:totalLeaders},byGroup,recentWeeks,trendWeeks,averageRate};
 }
-
 function enterEdit(){draftRoster=structuredClone(roster); editing=true; newLeaderName=""; newLeaderPhone=""; render()}
 function cancelEdit(){draftRoster=null; editing=false; render()}
 async function saveEdit(){
@@ -237,7 +308,7 @@ function addLeader(){
   if(!editing||!draftRoster) return flash("Turn on Edit mode first");
   const group=formatGroupName(newLeaderName); if(!group) return flash("Enter a leader name");
   if(draftRoster[group]||Object.keys(draftRoster).some(g=>g.toLowerCase()===group.toLowerCase())) return flash("That leader already exists");
-  draftRoster[group]={phone:(newLeaderPhone||"").trim(), members:[]};
+  draftRoster[group]={phone:(newLeaderPhone||"").trim(), members:[], icu:[]};
   newLeaderName=""; newLeaderPhone=""; flash("Leader added — tap Save to sync"); render();
 }
 function removeLeader(g){
@@ -266,23 +337,68 @@ function removePerson(g,name){
   Object.keys(state).forEach(d=>{if(state[d])delete state[d][key]});
   flash("Member removed — tap Save to sync"); render();
 }
-function movePerson(fromGroup,name,toGroup){
-  if(!editing||!draftRoster) return flash("Turn on Edit mode first");
+function findMemberAnywhere(groupRec,name){
+  const active=(groupRec.members||[]).find(m=>m.name===name);
+  if(active) return {member:active, from:"members"};
+  const icu=(groupRec.icu||[]).find(m=>m.name===name);
+  if(icu) return {member:icu, from:"icu"};
+  return null;
+}
+async function movePerson(fromGroup,name,toGroup){
   if(!toGroup||toGroup===fromGroup) return flash("Choose a different leader");
-  const from=draftRoster[fromGroup], to=draftRoster[toGroup];
+  const src=activeRoster();
+  const from=src[fromGroup], to=src[toGroup];
   if(!from||!to) return flash("Could not move member");
-  const member=(from.members||[]).find(m=>m.name===name);
-  if(!member) return flash("Member not found");
-  if((to.members||[]).some(m=>m.name.toLowerCase()===name.toLowerCase())) return flash("Already in that group");
-  draftRoster[fromGroup]={...from, members:(from.members||[]).filter(m=>m.name!==name)};
-  draftRoster[toGroup]={...to, members:(to.members||[]).concat([{...member}])};
+  const found=findMemberAnywhere(from,name);
+  if(!found) return flash("Member not found");
+  if((to.members||[]).some(m=>m.name.toLowerCase()===name.toLowerCase())||(to.icu||[]).some(m=>m.name.toLowerCase()===name.toLowerCase()))
+    return flash("Already in that group");
+  const next=structuredClone(src);
+  next[fromGroup]={...from,
+    members:found.from==="members"?(from.members||[]).filter(m=>m.name!==name):(from.members||[]),
+    icu:found.from==="icu"?(from.icu||[]).filter(m=>m.name!==name):(from.icu||[])
+  };
+  next[toGroup]={...to, members:[...(to.members||[]), {...found.member}], icu:to.icu||[]};
   const fromKey=personKey(fromGroup,name), toKey=personKey(toGroup,name);
   Object.keys(state).forEach(d=>{
     const day=state[d]; if(!day||!day[fromKey]) return;
     if(!day[toKey]) day[toKey]=day[fromKey];
     delete day[fromKey];
   });
-  flash("Moved "+name+" — tap Save to sync"); render();
+  if(editing){ draftRoster=next; flash("Moved "+name+" — tap Save to sync"); render(); return; }
+  roster=next; persistLocal();
+  try{
+    syncId=await saveCloud(syncId,{version:2,roster,attendance:state,submissions,updatedAt:new Date().toISOString()});
+    lastSyncedAt=new Date().toISOString(); setSyncInUrl(syncId); persistLocal();
+    flash("Moved "+name+" to "+leaderLabel(toGroup));
+  }catch{ flash("Moved "+name+" (saved on this phone — Sync failed)"); }
+  render();
+}
+
+async function applyRosterChange(next, okMsg, editMsg){
+  if(editing){ draftRoster=next; flash(editMsg); render(); return; }
+  roster=next; persistLocal();
+  try{
+    syncId=await saveCloud(syncId,{version:2,roster,attendance:state,submissions,updatedAt:new Date().toISOString()});
+    lastSyncedAt=new Date().toISOString(); setSyncInUrl(syncId); persistLocal(); flash(okMsg);
+  }catch{ flash(okMsg+" (saved on this phone — Sync failed)"); }
+  render();
+}
+async function sendToIcu(g,name){
+  const src=activeRoster(); const group=src[g]; if(!group) return flash("Could not move to ICU");
+  const member=(group.members||[]).find(m=>m.name===name); if(!member) return flash("Member not found");
+  if((group.icu||[]).some(m=>m.name.toLowerCase()===name.toLowerCase())) return flash("Already in ICU");
+  const next=structuredClone(src);
+  next[g]={...group, members:(group.members||[]).filter(m=>m.name!==name), icu:[...(group.icu||[]), {...member}]};
+  await applyRosterChange(next, name+" moved to ICU", name+" moved to ICU — tap Save to sync");
+}
+async function restoreFromIcu(g,name){
+  const src=activeRoster(); const group=src[g]; if(!group) return flash("Could not restore");
+  const member=(group.icu||[]).find(m=>m.name===name); if(!member) return flash("Not in ICU");
+  if((group.members||[]).some(m=>m.name.toLowerCase()===name.toLowerCase())) return flash("Already active");
+  const next=structuredClone(src);
+  next[g]={...group, icu:(group.icu||[]).filter(m=>m.name!==name), members:[...(group.members||[]), {...member}]};
+  await applyRosterChange(next, name+" restored to active list", name+" restored — tap Save to sync");
 }
 function setMemberPhone(g,name,phone){
   if(!editing||!draftRoster) return;
@@ -347,6 +463,28 @@ function bindEditActions(){
   const viewAll=document.getElementById("viewAll"); if(viewAll) viewAll.onclick=()=>{view="overview"; render()};
 }
 
+
+function isStandaloneApp(){
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+}
+function installTipHtml(){
+  if(isStandaloneApp()) return "";
+  if(localStorage.getItem("attendance-install-dismissed-v1")==="1") return "";
+  const isIos=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  const steps=isIos
+    ? `<ol><li>Tap the <b>Share</b> button (square with arrow) at the bottom of Safari</li><li>Scroll and tap <b>Add to Home Screen</b></li><li>Tap <b>Add</b> — Attendance opens like an app</li></ol>`
+    : `<ol><li>Open this page in your phone browser</li><li>Use the browser menu → <b>Install app</b> or <b>Add to Home Screen</b></li><li>Open the Attendance icon from your home screen</li></ol>`;
+  return `<div class="install-tip" id="installTip"><h3>Install on your iPhone</h3>
+    <p>Add Attendance to your Home Screen so it opens full-screen like an app (same church link).</p>
+    ${steps}
+    <div class="tip-actions"><button type="button" id="dismissInstall" class="secondary">Got it</button></div></div>`;
+}
+function bindInstallTip(){
+  const btn=document.getElementById("dismissInstall");
+  if(!btn) return;
+  btn.onclick=()=>{localStorage.setItem("attendance-install-dismissed-v1","1"); const tip=document.getElementById("installTip"); if(tip) tip.remove();};
+}
+
 function renderHome(){
   const r=activeRoster(); const total=countRoster(r);
   const cards=Object.entries(r).map(([group,rec])=>{
@@ -356,7 +494,7 @@ function renderHome(){
       <button type="button" class="leader-card-main" data-open="${esc(group)}">
         <span class="leader-name">${esc(leaderLabel(group))}</span>
         ${phone}
-        <span class="leader-meta">${(rec.members||[]).length} people${photos?` · ${photos} photo${photos===1?"":"s"}`:""}</span>
+        <span class="leader-meta">${(rec.members||[]).length} active${(rec.icu&&rec.icu.length)?` · ${rec.icu.length} ICU`:""}${photos?` · ${photos} photo${photos===1?"":"s"}`:""}</span>
         <span class="leader-status${submitted?" on":""}">${submitted?"Submitted":"Tap to submit"}</span>
       </button>
       ${editing?`<button type="button" class="leader-remove" data-remove-leader="${esc(group)}">Remove leader</button>`:""}
@@ -369,6 +507,7 @@ function renderHome(){
       <div class="total-meta">${Object.keys(r).length} leaders · week of ${currentDate}</div></div>
     <div class="hero-copy"><h2>Who is submitting this week?</h2>
       <p>Pick your name, mark attendance, add photos, and submit. Use Edit + Save to update leaders for every device.</p></div>
+    ${installTipHtml()}
     ${modeBar()}
     <div class="actions">${editActions()}</div>
     <div class="status-msg">${esc(statusMsg||(lastSyncedAt?("Last synced "+new Date(lastSyncedAt).toLocaleString()):"Shared across devices when you Save or Sync."))}</div>
@@ -381,6 +520,7 @@ function renderHome(){
         <button type="button" id="addLeaderBtn">Add leader</button>
       </div></section>`:""}`;
   document.getElementById("weekDate").onchange=e=>{currentDate=e.target.value; render()};
+  bindInstallTip();
   bindEditActions();
   app.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openLeader(b.getAttribute("data-open")));
   app.querySelectorAll("[data-remove-leader]").forEach(b=>b.onclick=()=>removeLeader(b.getAttribute("data-remove-leader")));
@@ -410,11 +550,12 @@ function renderLeader(){
           <button type="button" class="toggle-btn present${current==="present"?" active":""}" data-name="${esc(m.name)}" data-val="present">Present</button>
           <button type="button" class="toggle-btn absent${current==="absent"?" active":""}" data-name="${esc(m.name)}" data-val="absent">Absent</button>
         </span>
-        ${editing?`<label class="move-control">
-          <select data-move-select="${esc(m.name)}"><option value="">Move to…</option>${moveOptions}</select>
+        <button type="button" class="icu-btn" data-to-icu="${esc(m.name)}">To ICU</button>
+        <label class="move-control">
+          <select data-move-select="${esc(m.name)}"><option value="">Move to leader…</option>${moveOptions}</select>
           <button type="button" class="move-btn" data-move-member="${esc(m.name)}">Move</button>
         </label>
-        <button type="button" class="remove-btn" data-remove-member="${esc(m.name)}">Remove</button>`:""}
+        ${editing?`<button type="button" class="remove-btn" data-remove-member="${esc(m.name)}">Remove</button>`:""}
       </div></div>`;
   }).join("");
   const photos=images.map(img=>`<figure class="photo-tile"><img src="${img.dataUrl}" alt="${esc(img.name)}"><button type="button" class="photo-remove" data-remove="${esc(img.id)}">Remove</button></figure>`).join("");
@@ -425,7 +566,7 @@ function renderLeader(){
     ${modeBar()}
     <div class="summary-bar">
       <div>Members: <b>${counts.total}</b></div><div>Present: <b>${counts.present}</b></div>
-      <div>Absent: <b>${counts.absent}</b></div><div>Photos: <b>${images.length}</b></div>
+      <div>Absent: <b>${counts.absent}</b></div><div>ICU: <b>${((r[activeGroup]&&r[activeGroup].icu)||[]).length}</b></div><div>Photos: <b>${images.length}</b></div>
     </div>
     <div class="actions">
       <button type="button" id="submitBtn">${submittedAt?"Update submission":"Submit this week"}</button>
@@ -441,12 +582,19 @@ function renderLeader(){
             `<span class="phone-line">${leaderPhone?("☎ "+esc(leaderPhone)):"No phone saved"}</span>`}
         </div></section>
       <section class="group"><div class="group-head static"><h2>Members & attendance</h2><span class="group-count">${people.length}</span></div>
-        <div class="group-body">${rows}
+        <div class="group-body"><p class="photo-hint">Use <b>Move to leader…</b> to switch groups. Tap <b>To ICU</b> for long absences — the ICU list is in the next section below.</p>${rows}
           ${editing?`<div class="add-row">
             <input id="newName" type="text" placeholder="Member name">
             <input id="newPhone" type="tel" placeholder="Phone">
             <button type="button" id="addName">Add member</button>
           </div>`:""}
+        </div></section>
+      <section class="group icu-section" id="icu-section"><div class="group-head static"><h2>ICU — long absences</h2><span class="group-count">${((r[activeGroup]&&r[activeGroup].icu)||[]).length}</span></div>
+        <div class="group-body"><p class="photo-hint">This leader’s ICU list. Tap <b>To ICU</b> on an active member above to add them here. Restore brings them back to attendance.</p>
+          ${(((r[activeGroup]&&r[activeGroup].icu)||[]).length)?((r[activeGroup].icu||[]).map(m=>{
+            const moveOptionsIcu=otherGroups.map(g=>`<option value="${esc(g)}">${esc(leaderLabel(g))}</option>`).join("");
+            return `<div class="person-row"><div class="person-main"><span class="person-name">${esc(m.name)}</span>${m.phone?`<span class="person-phone">☎ ${esc(m.phone)}</span>`:""}</div><div class="person-actions"><button type="button" class="icu-btn restore" data-restore-icu="${esc(m.name)}">Restore</button><label class="move-control"><select data-move-select="${esc(m.name)}"><option value="">Move to leader…</option>${moveOptionsIcu}</select><button type="button" class="move-btn" data-move-member="${esc(m.name)}">Move</button></label></div></div>`;
+          }).join("")):`<p class="photo-empty">No one in ICU right now.</p>`}
         </div></section>
       <section class="group"><div class="group-head static"><h2>Weekly photos</h2><span class="group-count">${images.length}/${MAX_IMAGES}</span></div>
         <div class="group-body photo-body">
@@ -478,6 +626,8 @@ function renderLeader(){
   app.querySelectorAll(".toggle-btn").forEach(b=>b.onclick=()=>setStatus(activeGroup,b.dataset.name,b.dataset.val));
   app.querySelectorAll("[data-remove]").forEach(b=>b.onclick=()=>removeImage(b.getAttribute("data-remove")));
   app.querySelectorAll("[data-remove-member]").forEach(b=>b.onclick=()=>removePerson(activeGroup,b.getAttribute("data-remove-member")));
+  app.querySelectorAll("[data-to-icu]").forEach(b=>b.onclick=()=>sendToIcu(activeGroup,b.getAttribute("data-to-icu")));
+  app.querySelectorAll("[data-restore-icu]").forEach(b=>b.onclick=()=>restoreFromIcu(activeGroup,b.getAttribute("data-restore-icu")));
   app.querySelectorAll("[data-move-member]").forEach(b=>{
     b.onclick=()=>{
       const name=b.getAttribute("data-move-member");
@@ -495,10 +645,65 @@ function renderLeader(){
   }
 }
 
+
+function shortDate(date){const p=String(date).split("-"); return p.length===3?`${Number(p[1])}/${Number(p[2])}`:date}
+function legendHtml(items){return `<ul class="chart-legend">${items.map(i=>`<li><span class="swatch" style="background:${i.color}"></span>${i.label}</li>`).join("")}</ul>`}
+function statusDonutHtml(week){
+  const segs=[{v:week.present,c:"var(--present)"},{v:week.absent,c:"var(--absent)"},{v:week.unmarked,c:"#cfc6b0"}];
+  const total=Math.max(week.total,1), r=54, circ=2*Math.PI*r; let off=0;
+  const circles=segs.map(s=>{const len=(s.v/total)*circ; const el=`<circle cx="70" cy="70" r="${r}" fill="none" stroke="${s.c}" stroke-width="16" stroke-dasharray="${len} ${circ-len}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)"/>`; off+=len; return el;}).join("");
+  return `<div class="chart-panel"><div class="chart-panel-head"><h3>This week’s mix</h3><p>Present, absent, and not yet marked</p></div>
+    <div class="donut-wrap"><svg viewBox="0 0 140 140" class="donut-chart"><circle cx="70" cy="70" r="${r}" fill="none" stroke="#efe9d8" stroke-width="16"/>${circles}</svg>
+    <div class="donut-center"><strong>${week.rate}%</strong><span>rate</span></div></div>
+    ${legendHtml([{color:"var(--present)",label:`Present · ${week.present}`},{color:"var(--absent)",label:`Absent · ${week.absent}`},{color:"#cfc6b0",label:`Unmarked · ${week.unmarked}`}])}</div>`;
+}
+function submissionGaugeHtml(week){
+  const pct=week.totalGroups?Math.round(week.submittedGroups/week.totalGroups*100):0;
+  const r=48, circ=2*Math.PI*r, filled=(pct/100)*circ;
+  return `<div class="chart-panel"><div class="chart-panel-head"><h3>Submissions</h3><p>Leaders finished for this week</p></div>
+    <div class="donut-wrap compact"><svg viewBox="0 0 120 120" class="donut-chart"><circle cx="60" cy="60" r="${r}" fill="none" stroke="#efe9d8" stroke-width="12"/>
+    <circle cx="60" cy="60" r="${r}" fill="none" stroke="var(--gold)" stroke-width="12" stroke-dasharray="${filled} ${circ-filled}" stroke-linecap="round" transform="rotate(-90 60 60)"/></svg>
+    <div class="donut-center"><strong>${week.submittedGroups}/${week.totalGroups}</strong><span>${pct}%</span></div></div></div>`;
+}
+function trendChartHtml(weeks){
+  const width=320,height=160,padX=28,padY=18,innerW=width-padX*2,innerH=height-padY*2;
+  if(!weeks.length) return `<div class="chart-panel"><div class="chart-panel-head"><h3>Attendance trend</h3><p>Weekly rate across recent weeks</p></div><p class="chart-empty">No week history yet.</p></div>`;
+  const pts=weeks.map((week,i)=>{const x=weeks.length<=1?padX+innerW/2:padX+(i/(weeks.length-1))*innerW; const y=padY+innerH-(week.rate/100)*innerH; return {x,y,week};});
+  const line=pts.map(p=>`${p.x},${p.y}`).join(" ");
+  const area=`${padX},${padY+innerH} ${line} ${padX+innerW},${padY+innerH}`;
+  const grid=[0,25,50,75,100].map(t=>{const y=padY+innerH-(t/100)*innerH; return `<line x1="${padX}" y1="${y}" x2="${padX+innerW}" y2="${y}" class="chart-gridline"/><text x="4" y="${y+3}" class="chart-axis">${t}</text>`;}).join("");
+  const dots=pts.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="4.5" class="trend-dot"/><text x="${p.x}" y="${height-2}" text-anchor="middle" class="chart-axis">${shortDate(p.week.date)}</text>`).join("");
+  return `<div class="chart-panel"><div class="chart-panel-head"><h3>Attendance trend</h3><p>Weekly rate across recent weeks</p></div>
+    <svg viewBox="0 0 ${width} ${height}" class="trend-chart">${grid}<polygon points="${area}" class="trend-area"/><polyline points="${line}" class="trend-line"/>${dots}</svg>
+    ${legendHtml([{color:"var(--forest)",label:"Attendance rate %"}])}</div>`;
+}
+function leaderCompareHtml(groups){
+  const max=Math.max(1,...groups.map(r=>Math.max(r.present+r.absent+r.unmarked,1)));
+  const cols=groups.map(row=>{
+    const ph=(row.present/max)*100, ah=(row.absent/max)*100, uh=(row.unmarked/max)*100;
+    return `<button type="button" class="compare-col" data-open="${esc(row.group)}"><div class="compare-bars"><span class="stack present" style="height:${ph}%"></span><span class="stack absent" style="height:${ah}%"></span><span class="stack unmarked" style="height:${uh}%"></span></div><strong>${row.rate}%</strong><em>${esc(row.label)}</em></button>`;
+  }).join("");
+  return `<div class="chart-panel wide"><div class="chart-panel-head"><h3>Leaders compared</h3><p>Present vs absent vs unmarked this week</p></div><div class="compare-chart">${cols}</div>
+    ${legendHtml([{color:"var(--present)",label:"Present"},{color:"var(--absent)",label:"Absent"},{color:"#cfc6b0",label:"Unmarked"}])}</div>`;
+}
+function icuChartHtml(groups){
+  const total=groups.reduce((s,r)=>s+r.icu,0); const max=Math.max(1,...groups.map(r=>r.icu));
+  if(!total) return `<div class="chart-panel wide"><div class="chart-panel-head"><h3>ICU by leader</h3><p>No one in ICU right now</p></div><p class="chart-empty">ICU is empty across all groups.</p></div>`;
+  const rows=groups.filter(r=>r.icu>0).map(r=>`<div class="icu-bar-row"><span class="icu-bar-label">${esc(r.label)}</span><div class="icu-bar-track"><span class="icu-bar-fill" style="width:${(r.icu/max)*100}%"></span></div><strong>${r.icu}</strong></div>`).join("");
+  return `<div class="chart-panel wide"><div class="chart-panel-head"><h3>ICU by leader</h3><p>${total} member${total===1?"":"s"} set aside for follow-up</p></div><div class="icu-bars">${rows}</div></div>`;
+}
+function chartsHtml(a){
+  return `<div class="chart-grid">${statusDonutHtml(a.thisWeek)}${submissionGaugeHtml(a.thisWeek)}${trendChartHtml(a.trendWeeks)}${leaderCompareHtml(a.byGroup)}${icuChartHtml(a.byGroup)}</div>`;
+}
+function overviewSparkHtml(groups){
+  const items=groups.map(r=>`<button type="button" class="spark-item" data-open="${esc(r.group)}"><div class="spark-track"><span style="height:${Math.max(r.rate,4)}%"></span></div><em>${esc(r.label)}</em><strong>${r.rate}%</strong></button>`).join("");
+  return `<div class="overview-spark wrap"><div class="chart-panel-head"><h3>Week at a glance</h3><p>Tap a leader bar to open their group</p></div><div class="spark-row">${items}</div></div>`;
+}
+
 function renderDashboard(){
   const a=buildAnalytics(), w=a.thisWeek;
   const byGroup=a.byGroup.map(row=>`<div class="analytics-row"><div class="analytics-row-main"><button type="button" class="linkish" data-open="${esc(row.group)}">${esc(row.label)}</button>
-    <span class="muted">${row.members} members · ${row.present} present · ${row.absent} absent${row.submitted?" · submitted":""}</span></div>
+    <span class="muted">${row.members} active${row.icu?` · ${row.icu} ICU`:""} · ${row.present} present · ${row.absent} absent${row.submitted?" · submitted":""}</span></div>
     <div class="rate-bar"><span style="width:${row.rate}%"></span><em>${row.rate}%</em></div></div>`).join("");
   const weeks=a.recentWeeks.map(week=>`<div class="analytics-row"><div class="analytics-row-main"><strong>${week.date}</strong>
     <span class="muted">${week.present} present · ${week.absent} absent · ${week.submittedGroups}/${week.totalGroups} submitted</span></div>
@@ -509,6 +714,8 @@ function renderDashboard(){
       <div class="date-row"><label for="dashDate">Week of</label><input id="dashDate" type="date" value="${currentDate}"></div></div></header>
     <div class="stat-strip">
       <div class="stat-card highlight"><span class="stat-label">Total members</span><strong>${a.totalMembers}</strong></div>
+      <div class="stat-card"><span class="stat-label">Active</span><strong>${a.totalActive}</strong></div>
+      <div class="stat-card"><span class="stat-label">ICU</span><strong>${a.totalIcu}</strong></div>
       <div class="stat-card"><span class="stat-label">Leaders</span><strong>${a.totalLeaders}</strong></div>
       <div class="stat-card"><span class="stat-label">Present this week</span><strong>${w.present}</strong></div>
       <div class="stat-card"><span class="stat-label">Attendance rate</span><strong>${w.rate}%</strong></div>
@@ -516,6 +723,7 @@ function renderDashboard(){
       <div class="stat-card"><span class="stat-label">Submissions</span><strong>${w.submittedGroups}/${w.totalGroups}</strong></div>
     </div>
     <main>
+      ${chartsHtml(a)}
       <section class="group"><div class="group-head static"><h2>By leader this week</h2></div><div class="group-body">${byGroup}</div></section>
       <section class="group"><div class="group-head static"><h2>Recent weeks</h2></div><div class="group-body">${weeks}</div></section>
     </main>`;
@@ -523,9 +731,8 @@ function renderDashboard(){
   document.getElementById("dashDate").onchange=e=>{currentDate=e.target.value; render()};
   app.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openLeader(b.getAttribute("data-open")));
 }
-
 function renderOverview(){
-  const r=activeRoster(); const total=countRoster(r);
+  const r=activeRoster(); const total=countRoster(r); const a=buildAnalytics();
   const sections=Object.entries(r).map(([group,rec])=>{
     const counts=countGroup(group); const sub=getSub(group,currentDate);
     const photos=((sub&&sub.images)||[]).map(img=>`<figure class="photo-tile"><img src="${img.dataUrl}" alt="${esc(img.name)}"></figure>`).join("");
@@ -539,13 +746,14 @@ function renderOverview(){
     <header><div class="header-inner"><div><button type="button" class="back-link" id="backHome">← Leaders</button>
       <h1>All <span>Groups</span></h1></div>
       <div class="date-row"><label for="overviewDate">Week of</label><input id="overviewDate" type="date" value="${currentDate}"></div></div></header>
-    <div class="total-banner"><div><span class="total-label">Total members</span><strong class="total-number">${total}</strong></div></div>
+    <div class="total-banner"><div><span class="total-label">Total members</span><strong class="total-number">${total}</strong></div>
+      <div class="total-meta">${a.totalActive} active · ${a.totalIcu} ICU · week of ${currentDate}</div></div>
+    ${overviewSparkHtml(a.byGroup)}
     <main>${sections}</main>`;
   document.getElementById("backHome").onclick=goHome;
   document.getElementById("overviewDate").onchange=e=>{currentDate=e.target.value; render()};
   app.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openLeader(b.getAttribute("data-open")));
 }
-
 function render(){ if(view==="leader"&&activeGroup) renderLeader(); else if(view==="overview") renderOverview(); else if(view==="dashboard") renderDashboard(); else renderHome(); }
 
 async function boot(){
@@ -581,6 +789,9 @@ async function boot(){
   const leader=params.get("leader")||params.get("g");
   if(leader){const g=findGroupBySlug(leader); if(g){activeGroup=g; view="leader"; notes=(getSub(g,currentDate)||{}).notes||""}}
   render();
+  if("serviceWorker" in navigator){
+    navigator.serviceWorker.register("./sw.js").catch(()=>{});
+  }
 }
 boot();
 </script>
