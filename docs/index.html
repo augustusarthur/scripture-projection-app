@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Attendance Ledger</title>
+<meta name="description" content="First Love Church small-group attendance for leaders">
+<meta name="theme-color" content="#1a3327">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Attendance">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+<style>
+:root{--ink:#1f2a24;--paper:#f6f3ea;--card:#fff;--forest:#2c4a3b;--forest-deep:#1a3327;--gold:#c8952f;--gold-soft:#f0deb3;--line:#d9d2bd;--muted:#7c7568;--present:#2c4a3b;--absent:#b6503a}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse 80% 50% at 10% -10%,rgba(240,222,179,.55),transparent 55%),radial-gradient(ellipse 60% 40% at 100% 0%,rgba(44,74,59,.08),transparent 50%),var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;padding:0 0 calc(60px + env(safe-area-inset-bottom));min-height:100vh;min-height:100dvh}
+header{background:linear-gradient(160deg,var(--forest-deep),#243f32);color:var(--paper);padding:calc(28px + env(safe-area-inset-top)) 24px 22px;position:sticky;top:0;z-index:10;box-shadow:0 4px 14px rgba(0,0,0,.15)}
+.header-inner{max-width:880px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px}
+h1{font-family:Georgia,serif;font-size:26px;margin:0}h1 span{color:var(--gold-soft);font-style:italic}
+.date-row{display:flex;align-items:center;gap:10px}.date-row label{font-size:13px;color:var(--gold-soft)}
+.date-row input[type=date]{background:var(--forest);border:1px solid var(--gold);color:var(--paper);padding:7px 10px;border-radius:6px;font-size:14px}
+.back-link{background:transparent;border:none;color:var(--gold-soft);font-size:13px;padding:0;margin-bottom:6px;cursor:pointer;display:block}
+.wrap,.total-banner,.stat-strip,.manage-panel,.hero-copy,.install-tip,.summary-bar,.actions,.status-msg,main{max-width:880px;margin-left:auto;margin-right:auto;padding-left:24px;padding-right:24px}
+.total-banner{margin-top:18px;padding:16px 20px;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px;background:linear-gradient(135deg,#243f32,var(--forest-deep));color:var(--paper);border-radius:12px}
+.total-label{display:block;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--gold-soft);margin-bottom:4px}
+.total-number{font-family:Georgia,serif;font-size:40px;line-height:1}
+.total-meta{font-size:13px;color:rgba(246,243,234,.85)}
+.hero-copy{margin-top:22px}.hero-copy h2{font-family:Georgia,serif;font-size:22px;margin:0 0 8px;color:var(--forest-deep)}
+.hero-copy p{margin:0;color:var(--muted);font-size:14px;line-height:1.45;max-width:36rem}
+.mode-banner{margin-top:12px;padding:10px 14px;border-radius:8px;background:#fff7e6;border:1px solid #ead7a8;color:#6a5520;font-size:13px}
+.mode-banner.view{background:#eef5f0;border-color:#c7d9ce;color:var(--forest-deep)}
+.summary-bar{margin-top:18px;display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--muted)}.summary-bar b{color:var(--forest-deep);font-size:16px}
+.actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.actions button,.photo-actions button,.add-row button,.field-row button{background:var(--forest-deep);color:#fff;border:none;padding:10px 16px;border-radius:6px;font-size:13.5px;cursor:pointer}
+.actions button.secondary,.photo-actions button{background:#fff;color:var(--forest-deep);border:1px solid var(--line)}
+.actions button.danger{background:#fff;color:var(--absent);border:1px solid #e2b4aa}
+.photo-actions button:disabled{opacity:.5;cursor:not-allowed}
+.status-msg{margin-top:10px;font-size:12.5px;color:var(--muted);min-height:16px}
+main{margin-top:18px;padding-bottom:24px}
+.leader-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.leader-card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.leader-card.submitted{border-color:var(--forest);background:linear-gradient(180deg,#fff,#f3f7f4)}
+.leader-card-main{text-align:left;background:transparent;border:none;padding:18px 16px 10px;cursor:pointer;display:flex;flex-direction:column;gap:6px;font:inherit;width:100%}
+.leader-name{font-family:Georgia,serif;font-size:20px;color:var(--forest-deep)}
+.leader-meta,.phone-line{font-size:13px;color:var(--muted)}
+.leader-status{margin-top:8px;font-size:12.5px;color:var(--gold);font-weight:600}.leader-status.on{color:var(--forest)}
+.leader-remove{border:none;border-top:1px solid #f0ede1;background:transparent;color:var(--muted);padding:10px 16px;font-size:12.5px;cursor:pointer;text-align:left}
+.manage-panel{margin-top:8px;padding-bottom:24px}
+.manage-panel h3{font-family:Georgia,serif;font-size:16px;margin:0 0 10px;color:var(--forest-deep)}
+.manage-panel .add-row,.field-row{border:1px solid var(--line);border-radius:10px;background:var(--card);padding:12px;display:flex;gap:8px;flex-wrap:wrap}
+.field-row input,.add-row input,.notes-input,.phone-input{flex:1;min-width:140px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;font-size:14px;font-family:inherit}
+.group{background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:18px;overflow:hidden}
+.group-head{background:var(--gold-soft);padding:12px 18px;display:flex;justify-content:space-between;align-items:center;width:100%;border:none;font:inherit;text-align:left;cursor:pointer}
+.group-head.static{cursor:default}.group-head h2{font-family:Georgia,serif;font-size:17px;margin:0;color:var(--forest-deep)}
+.group-count{font-size:12.5px;color:var(--forest);background:rgba(255,255,255,.6);padding:3px 9px;border-radius:20px}
+.group-body{padding:6px 10px}
+.person-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px;border-bottom:1px solid #f0ede1;font-size:15px;flex-wrap:wrap}
+.person-row:last-of-type{border-bottom:none}
+.person-main{flex:1;min-width:140px}.person-name{display:block}.person-phone{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.person-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.toggle-group{display:flex;gap:6px}
+.toggle-btn{border:1px solid var(--line);background:var(--paper);color:var(--muted);padding:6px 13px;border-radius:20px;font-size:13px;cursor:pointer}
+.toggle-btn.present.active{background:var(--present);border-color:var(--present);color:#fff}
+.toggle-btn.absent.active{background:var(--absent);border-color:var(--absent);color:#fff}
+.remove-btn{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:12px;padding:4px 6px}
+.move-control{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.move-control select{border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:12.5px;background:#fff;color:var(--ink);max-width:160px}
+.move-btn{background:#fff!important;color:var(--forest-deep)!important;border:1px solid var(--line)!important;padding:6px 10px!important;font-size:12.5px!important}
+.icu-section .group-head.static{background:#f0d9d4}
+.icu-btn{border:1px solid #e2b4aa;background:#fff7f5;color:var(--absent);border-radius:6px;padding:6px 10px;font-size:12.5px;cursor:pointer}
+.icu-btn.restore{border-color:var(--forest);background:#eef5f0;color:var(--forest-deep)}
+.add-row{display:flex;gap:8px;padding:10px;border-top:1px solid #f0ede1;flex-wrap:wrap}
+.notes-input{width:100%;min-height:84px;resize:vertical}
+.photo-body{padding:14px}.photo-hint,.photo-empty,.notes-preview{margin:0 0 12px;color:var(--muted);font-size:13.5px}
+.photo-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.photo-tile{margin:0;position:relative;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:#eee;aspect-ratio:1}
+.photo-tile img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-remove{position:absolute;left:6px;right:6px;bottom:6px;border:none;background:rgba(26,51,39,.85);color:#fff;border-radius:6px;padding:6px;font-size:12px;cursor:pointer}
+.pill{display:inline-block;margin-left:8px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;background:var(--forest);color:#fff}
+.stat-strip{margin-top:18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.stat-card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 12px;display:flex;flex-direction:column;gap:6px}
+.stat-card.highlight{background:linear-gradient(160deg,#243f32,var(--forest-deep));color:var(--paper);border-color:transparent}
+.stat-card.highlight .stat-label{color:var(--gold-soft)}
+.stat-label{font-size:11.5px;color:var(--muted);text-transform:uppercase}
+.stat-card strong{font-family:Georgia,serif;font-size:28px;line-height:1}
+.analytics-row{padding:12px 8px;border-bottom:1px solid #f0ede1}
+.analytics-row-main{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
+.muted{color:var(--muted);font-size:12.5px}
+.linkish{background:none;border:none;padding:0;font:inherit;font-weight:600;color:var(--forest-deep);cursor:pointer;text-align:left}
+.rate-bar{position:relative;height:22px;background:#efe9d8;border-radius:999px;overflow:hidden}
+.rate-bar span{display:block;height:100%;background:linear-gradient(90deg,var(--forest),#3d6a54)}
+.rate-bar em{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-style:normal;font-size:12px;font-weight:600;color:var(--forest-deep)}
+.share-box{margin-top:12px;padding:12px;border:1px dashed var(--line);border-radius:10px;background:#fff;font-size:13px;color:var(--muted);word-break:break-all}
+.share-box code{color:var(--forest-deep);font-size:12.5px}
+.install-tip{margin:14px auto 0;border-radius:12px;border:1px solid #c7d9ce;background:linear-gradient(180deg,#f3f7f4,#fff);color:var(--forest-deep);font-size:13.5px;line-height:1.45;padding-top:14px;padding-bottom:14px}
+.install-tip h3{margin:0 0 6px;font-family:Georgia,serif;font-size:16px}
+.install-tip ol{margin:8px 0 0;padding-left:1.2rem}
+.install-tip li{margin:4px 0}
+.install-tip .tip-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.install-tip button{background:var(--forest-deep);color:#fff;border:none;padding:8px 12px;border-radius:6px;font-size:13px;cursor:pointer}
+.install-tip button.secondary{background:#fff;color:var(--forest-deep);border:1px solid var(--line)}
+.standalone-hide{display:none!important}
+
+
+.chart-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.chart-panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 14px 14px;min-width:0}
+.chart-panel.wide{grid-column:1/-1}
+.chart-panel-head h3{margin:0 0 4px;font-family:Georgia,serif;font-size:17px;color:var(--forest-deep)}
+.chart-panel-head p{margin:0 0 14px;font-size:12.5px;color:var(--muted)}
+.chart-empty{margin:8px 0 0;color:var(--muted);font-size:13.5px}
+.chart-legend{list-style:none;margin:12px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:10px 14px;font-size:12px;color:var(--muted)}
+.chart-legend li{display:inline-flex;align-items:center;gap:6px}
+.chart-legend .swatch{width:10px;height:10px;border-radius:2px;display:inline-block}
+.donut-wrap{position:relative;width:min(180px,100%);margin:0 auto}
+.donut-wrap.compact{width:min(150px,100%)}
+.donut-chart{width:100%;height:auto;display:block}
+.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.donut-center strong{font-family:Georgia,serif;font-size:26px;line-height:1;color:var(--forest-deep)}
+.donut-center span{font-size:12px;color:var(--muted);margin-top:4px}
+.trend-chart{width:100%;height:auto;display:block}
+.chart-gridline{stroke:#efe9d8;stroke-width:1}
+.chart-axis{fill:var(--muted);font-size:9px}
+.trend-area{fill:rgba(44,74,59,.14)}
+.trend-line{fill:none;stroke:var(--forest);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.trend-dot{fill:var(--gold);stroke:var(--forest-deep);stroke-width:1.5}
+.compare-chart{display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr));gap:8px;align-items:end;min-height:180px}
+.compare-col{border:none;background:transparent;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font:inherit;color:inherit;min-width:0}
+.compare-bars{width:100%;max-width:42px;height:140px;display:flex;align-items:flex-end;gap:3px;padding:0 2px}
+.compare-bars .stack{flex:1;border-radius:4px 4px 0 0;min-height:2px}
+.compare-bars .stack.present{background:linear-gradient(180deg,#3d6a54,var(--present))}
+.compare-bars .stack.absent{background:linear-gradient(180deg,#d07a66,var(--absent))}
+.compare-bars .stack.unmarked{background:#cfc6b0}
+.compare-col strong{font-size:12px;color:var(--forest-deep)}
+.compare-col em{font-style:normal;font-size:11px;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.icu-bars{display:flex;flex-direction:column;gap:10px}
+.icu-bar-row{display:grid;grid-template-columns:90px 1fr 28px;gap:10px;align-items:center}
+.icu-bar-label{font-size:13px;color:var(--forest-deep);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.icu-bar-track{height:12px;background:#f3e4df;border-radius:999px;overflow:hidden}
+.icu-bar-fill{display:block;height:100%;background:linear-gradient(90deg,#c56b57,var(--absent));border-radius:inherit}
+.icu-bar-row strong{font-size:13px;color:var(--absent);text-align:right}
+.overview-spark{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 14px;margin-top:14px}
+.spark-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:10px}
+.spark-item{border:none;background:transparent;padding:4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;font:inherit;color:inherit}
+.spark-track{width:28px;height:72px;background:#efe9d8;border-radius:8px;display:flex;align-items:flex-end;overflow:hidden}
+.spark-track span{display:block;width:100%;background:linear-gradient(180deg,#3d6a54,var(--forest));border-radius:8px 8px 0 0;min-height:4%}
+.spark-item em{font-style:normal;font-size:11px;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.spark-item strong{font-size:12px;color:var(--forest-deep)}
+@media (max-width:640px){.chart-grid{grid-template-columns:1fr}.icu-bar-row{grid-template-columns:70px 1fr 24px}}
+@media (max-width:640px){.person-row{flex-direction:column;align-items:stretch}.toggle-btn{flex:1;text-align:center}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const DEFAULT_SYNC_ID = "019fa12a-e208-7876-b8f3-4f51e32a3093";
+const SYNC_API = "https://jsonblob.com/api/jsonBlob";
+const DEFAULT_ROSTER = {
+  "Aliye's Group": {phone:"", icu:[], members:["Anthony","Heba","Jeremy","Jordan","Josiah","Odera","Patrick","Tessa","Kokou","Kriti","Adrianna","Judith"].map(n=>({name:n,phone:""}))},
+  "Augustus's Group": {phone:"", icu:[], members:["Dieumerci","Ashlee","Brian","Furri","Pastor Glodie","Pressley","Terrence","Israel","Uyi","Aliye","Chancela","Chidi","Diana","Ephraim","Korey","Mama Vivian","Nancy","Shalyne"].map(n=>({name:n,phone:""}))},
+  "Diana's Group": {phone:"", icu:[], members:["Caleb","Dawit","Ian","Kameron","Lady Nikki","Rehema"].map(n=>({name:n,phone:""}))},
+  "Naa's Group": {phone:"", icu:[], members:["Chiche","Kriti","Mac Noble","Mya","Tarmadji","Treasure"].map(n=>({name:n,phone:""}))},
+  "Shalyne's Group": {phone:"", icu:[], members:["Eden M","Morris","Talent","Trishana","Vanessa","Dennis","Brian","Douglas","Maru"].map(n=>({name:n,phone:""}))},
+  "Felix's Group": {phone:"", icu:[], members:["Gerald","Theresa","Jackson","Cisco","Nancy Twum","Jeff"].map(n=>({name:n,phone:""}))},
+  "Needs a Group": {phone:"", icu:[], members:["Lucky","Atrel/Joseph","Dezhon","Johan"].map(n=>({name:n,phone:""}))}
+};
+const MAX_IMAGES=8;
+let roster=structuredClone(DEFAULT_ROSTER);
+let draftRoster=null;
+let state={}, submissions={};
+let view="home", activeGroup=null, editing=false, saving=false;
+let currentDate=new Date().toISOString().slice(0,10);
+let notes="", statusMsg="", statusTimer=null, uploading=false;
+let newLeaderName="", newLeaderPhone="";
+let syncId=DEFAULT_SYNC_ID, lastSyncedAt="";
+const app=document.getElementById("app");
+
+function personKey(g,n){return g+"|"+n}
+function submissionKey(g,d){return g+"|"+d}
+function leaderSlug(g){return g.toLowerCase().replace(/['']/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")}
+function leaderLabel(g){return g==="Needs a Group"?g:g.replace(/'s Group$/i,"")}
+function formatGroupName(name){const t=(name||"").trim().replace(/\s+/g," "); if(!t)return""; if(/group$/i.test(t))return t; if(t.toLowerCase().endsWith("s"))return t+"' Group"; return t+"'s Group"}
+function findGroupBySlug(slug){const n=(slug||"").toLowerCase(); return Object.keys(activeRoster()).find(g=>leaderSlug(g)===n)}
+function activeRoster(){return editing && draftRoster ? draftRoster : roster}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function flash(m){statusMsg=m; render(); clearTimeout(statusTimer); statusTimer=setTimeout(()=>{statusMsg=""; render()},2800)}
+function dayState(){return state[currentDate]||{}}
+function getSub(g,d){return submissions[submissionKey(g,d)]||null}
+function countRoster(r){return Object.values(r).reduce((s,g)=>s+(g.members||[]).length+(g.icu||[]).length,0)}
+function countGroup(g){const people=(activeRoster()[g]?.members)||[]; const day=dayState(); let present=0,absent=0; people.forEach(m=>{const v=day[personKey(g,m.name)]; if(v==="present")present++; if(v==="absent")absent++}); return {present,absent,unmarked:Math.max(people.length-present-absent,0),total:people.length}}
+function groupAttendance(g){const out={}, day=dayState(); ((activeRoster()[g]?.members)||[]).forEach(m=>{const k=personKey(g,m.name); if(day[k])out[k]=day[k]}); return out}
+function normalizeRoster(raw){
+  if(!raw||typeof raw!=="object") return structuredClone(DEFAULT_ROSTER);
+  const next={};
+  Object.entries(raw).forEach(([g,v])=>{
+    if(Array.isArray(v)) next[g]={phone:"", icu:[], members:v.filter(x=>typeof x==="string").map(n=>({name:n,phone:""}))};
+    else if(v&&typeof v==="object"){
+      const members=Array.isArray(v.members)?v.members:[];
+      const icu=Array.isArray(v.icu)?v.icu:[]; next[g]={phone:typeof v.phone==="string"?v.phone:"", icu:icu.map(item=>{if(typeof item==="string") return {name:item,phone:""}; if(item&&typeof item==="object"&&typeof item.name==="string") return {name:item.name, phone:typeof item.phone==="string"?item.phone:""}; return null;}).filter(Boolean), members:members.map(item=>{
+        if(typeof item==="string") return {name:item,phone:""};
+        if(item&&typeof item==="object"&&typeof item.name==="string") return {name:item.name, phone:typeof item.phone==="string"?item.phone:""};
+        return null;
+      }).filter(Boolean)};
+    }
+  });
+  return Object.keys(next).length?next:structuredClone(DEFAULT_ROSTER);
+}
+function setSyncInUrl(id){
+  const url=new URL(location.href);
+  url.searchParams.set("sync", id);
+  history.replaceState({},"",url.toString());
+}
+function shareUrl(){
+  const url=new URL(location.href);
+  url.searchParams.set("sync", syncId);
+  url.searchParams.delete("leader");
+  url.searchParams.delete("g");
+  return url.toString();
+}
+async function loadCloud(id){
+  const res=await fetch(SYNC_API+"/"+id,{headers:{Accept:"application/json"},cache:"no-store"});
+  if(!res.ok) return null;
+  return await res.json();
+}
+async function saveCloud(id, payload){
+  const body=JSON.stringify(payload);
+  if(id){
+    const put=await fetch(SYNC_API+"/"+id,{method:"PUT",headers:{"Content-Type":"application/json",Accept:"application/json"},body});
+    if(put.ok) return id;
+  }
+  const create=await fetch(SYNC_API,{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body});
+  if(!create.ok) throw new Error("Save failed");
+  const loc=create.headers.get("Location")||"";
+  const newId=loc.split("/").filter(Boolean).pop();
+  if(!newId) throw new Error("Save failed");
+  return newId;
+}
+function persistLocal(){
+  localStorage.setItem("church-attendance-roster-v2", JSON.stringify(roster));
+  localStorage.setItem("church-attendance-state-v2", JSON.stringify(state));
+  localStorage.setItem("church-attendance-submissions-v2", JSON.stringify(submissions));
+  localStorage.setItem("church-attendance-sync-id-v1", syncId);
+}
+function buildAnalytics(){
+  const r=activeRoster(); const totalMembers=countRoster(r);
+  const totalActive=Object.values(r).reduce((s,g)=>s+(g.members||[]).length,0);
+  const totalIcu=Math.max(totalMembers-totalActive,0);
+  const totalLeaders=Object.keys(r).length; const day=dayState();
+  let present=0,absent=0,total=0,submittedGroups=0;
+  const byGroup=Object.entries(r).map(([group,rec])=>{
+    let p=0,a=0; const members=rec.members||[]; const icu=(rec.icu||[]).length;
+    members.forEach(m=>{const v=day[personKey(group,m.name)]; if(v==="present")p++; if(v==="absent")a++});
+    present+=p; absent+=a; total+=members.length;
+    const sub=getSub(group,currentDate); if(sub&&sub.submittedAt)submittedGroups++;
+    const marked=p+a;
+    return {group,label:leaderLabel(group),members:members.length,icu,present:p,absent:a,unmarked:Math.max(members.length-p-a,0),rate:marked?Math.round(p/marked*100):0,submitted:!!(sub&&sub.submittedAt),photos:(sub&&sub.images&&sub.images.length)||0};
+  });
+  const unmarked=Math.max(total-present-absent,0), marked=present+absent, rate=marked?Math.round(present/marked*100):0;
+  const dates=new Set(Object.keys(state)); Object.keys(submissions).forEach(k=>{const d=k.split("|").pop(); if(d)dates.add(d)}); dates.add(currentDate);
+  const recentWeeks=[...dates].sort((a,b)=>b.localeCompare(a)).slice(0,8).map(date=>{
+    const d=state[date]||{}; let p=0,a=0,t=0,sub=0;
+    Object.entries(r).forEach(([g,rec])=>{(rec.members||[]).forEach(m=>{t++; const v=d[personKey(g,m.name)]; if(v==="present")p++; if(v==="absent")a++}); if(getSub(g,date)&&getSub(g,date).submittedAt)sub++});
+    const m=p+a; return {date,present:p,absent:a,unmarked:Math.max(t-p-a,0),total:t,rate:m?Math.round(p/m*100):0,submittedGroups:sub,totalGroups:totalLeaders};
+  });
+  const trendWeeks=[...recentWeeks].reverse();
+  const withMarks=recentWeeks.filter(w=>w.present+w.absent>0);
+  const averageRate=withMarks.length?Math.round(withMarks.reduce((s,w)=>s+w.rate,0)/withMarks.length):0;
+  return {totalMembers,totalActive,totalIcu,totalLeaders,thisWeek:{date:currentDate,present,absent,unmarked,total,rate,submittedGroups,totalGroups:totalLeaders},byGroup,recentWeeks,trendWeeks,averageRate};
+}
+function enterEdit(){draftRoster=structuredClone(roster); editing=true; newLeaderName=""; newLeaderPhone=""; render()}
+function cancelEdit(){draftRoster=null; editing=false; render()}
+async function saveEdit(){
+  if(!draftRoster) return;
+  saving=true; render();
+  try{
+    roster=structuredClone(draftRoster);
+    const payload={version:2, roster, attendance:state, submissions, updatedAt:new Date().toISOString()};
+    syncId=await saveCloud(syncId, payload);
+    lastSyncedAt=payload.updatedAt;
+    setSyncInUrl(syncId);
+    persistLocal();
+    draftRoster=null; editing=false;
+    flash("Saved for all devices");
+  }catch(e){flash(e.message||"Save failed")}
+  finally{saving=false; render()}
+}
+async function syncNow(){
+  saving=true; render();
+  try{
+    const payload={version:2, roster, attendance:state, submissions, updatedAt:new Date().toISOString()};
+    syncId=await saveCloud(syncId, payload);
+    lastSyncedAt=payload.updatedAt;
+    setSyncInUrl(syncId);
+    persistLocal();
+    flash("Synced to all devices");
+  }catch(e){flash(e.message||"Sync failed")}
+  finally{saving=false; render()}
+}
+
+function openLeader(g){activeGroup=g; view="leader"; notes=(getSub(g,currentDate)||{}).notes||""; const url=new URL(location.href); url.searchParams.set("leader",leaderSlug(g)); history.replaceState({},"",url.toString()); render()}
+function goHome(){view="home"; activeGroup=null; const url=new URL(location.href); url.searchParams.delete("leader"); url.searchParams.delete("g"); history.replaceState({},"",url.toString()); render()}
+function setStatus(g,n,val){if(!state[currentDate])state[currentDate]={}; const k=personKey(g,n); if(state[currentDate][k]===val)delete state[currentDate][k]; else state[currentDate][k]=val; persistLocal(); render()}
+function markGroupPresent(g){if(!state[currentDate])state[currentDate]={}; ((activeRoster()[g]?.members)||[]).forEach(m=>state[currentDate][personKey(g,m.name)]="present"); persistLocal(); flash("Marked group present")}
+function addLeader(){
+  if(!editing||!draftRoster) return flash("Turn on Edit mode first");
+  const group=formatGroupName(newLeaderName); if(!group) return flash("Enter a leader name");
+  if(draftRoster[group]||Object.keys(draftRoster).some(g=>g.toLowerCase()===group.toLowerCase())) return flash("That leader already exists");
+  draftRoster[group]={phone:(newLeaderPhone||"").trim(), members:[], icu:[]};
+  newLeaderName=""; newLeaderPhone=""; flash("Leader added — tap Save to sync"); render();
+}
+function removeLeader(g){
+  if(!editing||!draftRoster) return flash("Turn on Edit mode first");
+  if(!confirm("Remove "+leaderLabel(g)+" and their members?")) return;
+  delete draftRoster[g];
+  Object.keys(state).forEach(d=>{Object.keys(state[d]||{}).forEach(k=>{if(k.startsWith(g+"|"))delete state[d][k]})});
+  Object.keys(submissions).forEach(k=>{if(k.startsWith(g+"|"))delete submissions[k]});
+  if(activeGroup===g){activeGroup=null; view="home"}
+  flash("Leader removed — tap Save to sync"); render();
+}
+function setLeaderPhone(g,phone){if(!editing||!draftRoster||!draftRoster[g])return; draftRoster[g].phone=phone; }
+function addPerson(g,name,phone){
+  if(!editing||!draftRoster) return flash("Turn on Edit mode first");
+  name=(name||"").trim(); if(!name)return;
+  const members=draftRoster[g].members||[];
+  if(members.some(m=>m.name.toLowerCase()===name.toLowerCase())) return;
+  draftRoster[g].members=members.concat([{name, phone:(phone||"").trim()}]);
+  flash("Member added — tap Save to sync"); render();
+}
+function removePerson(g,name){
+  if(!editing||!draftRoster) return flash("Turn on Edit mode first");
+  if(!confirm("Remove "+name+"?")) return;
+  const key=personKey(g,name);
+  draftRoster[g].members=(draftRoster[g].members||[]).filter(m=>m.name!==name);
+  Object.keys(state).forEach(d=>{if(state[d])delete state[d][key]});
+  flash("Member removed — tap Save to sync"); render();
+}
+function findMemberAnywhere(groupRec,name){
+  const active=(groupRec.members||[]).find(m=>m.name===name);
+  if(active) return {member:active, from:"members"};
+  const icu=(groupRec.icu||[]).find(m=>m.name===name);
+  if(icu) return {member:icu, from:"icu"};
+  return null;
+}
+async function movePerson(fromGroup,name,toGroup){
+  if(!toGroup||toGroup===fromGroup) return flash("Choose a different leader");
+  const src=activeRoster();
+  const from=src[fromGroup], to=src[toGroup];
+  if(!from||!to) return flash("Could not move member");
+  const found=findMemberAnywhere(from,name);
+  if(!found) return flash("Member not found");
+  if((to.members||[]).some(m=>m.name.toLowerCase()===name.toLowerCase())||(to.icu||[]).some(m=>m.name.toLowerCase()===name.toLowerCase()))
+    return flash("Already in that group");
+  const next=structuredClone(src);
+  next[fromGroup]={...from,
+    members:found.from==="members"?(from.members||[]).filter(m=>m.name!==name):(from.members||[]),
+    icu:found.from==="icu"?(from.icu||[]).filter(m=>m.name!==name):(from.icu||[])
+  };
+  next[toGroup]={...to, members:[...(to.members||[]), {...found.member}], icu:to.icu||[]};
+  const fromKey=personKey(fromGroup,name), toKey=personKey(toGroup,name);
+  Object.keys(state).forEach(d=>{
+    const day=state[d]; if(!day||!day[fromKey]) return;
+    if(!day[toKey]) day[toKey]=day[fromKey];
+    delete day[fromKey];
+  });
+  if(editing){ draftRoster=next; flash("Moved "+name+" — tap Save to sync"); render(); return; }
+  roster=next; persistLocal();
+  try{
+    syncId=await saveCloud(syncId,{version:2,roster,attendance:state,submissions,updatedAt:new Date().toISOString()});
+    lastSyncedAt=new Date().toISOString(); setSyncInUrl(syncId); persistLocal();
+    flash("Moved "+name+" to "+leaderLabel(toGroup));
+  }catch{ flash("Moved "+name+" (saved on this phone — Sync failed)"); }
+  render();
+}
+
+async function applyRosterChange(next, okMsg, editMsg){
+  if(editing){ draftRoster=next; flash(editMsg); render(); return; }
+  roster=next; persistLocal();
+  try{
+    syncId=await saveCloud(syncId,{version:2,roster,attendance:state,submissions,updatedAt:new Date().toISOString()});
+    lastSyncedAt=new Date().toISOString(); setSyncInUrl(syncId); persistLocal(); flash(okMsg);
+  }catch{ flash(okMsg+" (saved on this phone — Sync failed)"); }
+  render();
+}
+async function sendToIcu(g,name){
+  const src=activeRoster(); const group=src[g]; if(!group) return flash("Could not move to ICU");
+  const member=(group.members||[]).find(m=>m.name===name); if(!member) return flash("Member not found");
+  if((group.icu||[]).some(m=>m.name.toLowerCase()===name.toLowerCase())) return flash("Already in ICU");
+  const next=structuredClone(src);
+  next[g]={...group, members:(group.members||[]).filter(m=>m.name!==name), icu:[...(group.icu||[]), {...member}]};
+  await applyRosterChange(next, name+" moved to ICU", name+" moved to ICU — tap Save to sync");
+}
+async function restoreFromIcu(g,name){
+  const src=activeRoster(); const group=src[g]; if(!group) return flash("Could not restore");
+  const member=(group.icu||[]).find(m=>m.name===name); if(!member) return flash("Not in ICU");
+  if((group.members||[]).some(m=>m.name.toLowerCase()===name.toLowerCase())) return flash("Already active");
+  const next=structuredClone(src);
+  next[g]={...group, icu:(group.icu||[]).filter(m=>m.name!==name), members:[...(group.members||[]), {...member}]};
+  await applyRosterChange(next, name+" restored to active list", name+" restored — tap Save to sync");
+}
+function setMemberPhone(g,name,phone){
+  if(!editing||!draftRoster) return;
+  const m=(draftRoster[g].members||[]).find(x=>x.name===name); if(m) m.phone=phone;
+}
+async function compressImage(file){
+  if(!file.type.startsWith("image/")) throw new Error("Please choose an image file.");
+  const bitmap=await createImageBitmap(file); const maxDim=1280;
+  const scale=Math.min(1,maxDim/Math.max(bitmap.width,bitmap.height));
+  const w=Math.max(1,Math.round(bitmap.width*scale)), h=Math.max(1,Math.round(bitmap.height*scale));
+  const canvas=document.createElement("canvas"); canvas.width=w; canvas.height=h;
+  canvas.getContext("2d").drawImage(bitmap,0,0,w,h); bitmap.close();
+  return {id:Date.now()+"-"+Math.random().toString(36).slice(2,8), name:file.name||"photo.jpg", dataUrl:canvas.toDataURL("image/jpeg",.72), addedAt:new Date().toISOString()};
+}
+async function addImages(fileList){
+  if(!activeGroup||!fileList||!fileList.length) return;
+  const key=submissionKey(activeGroup,currentDate);
+  const current=getSub(activeGroup,currentDate)||{group:activeGroup,date:currentDate,attendance:{},images:[],notes:"",submittedAt:null};
+  const remaining=MAX_IMAGES-current.images.length; if(remaining<=0) return flash("Max "+MAX_IMAGES+" photos per week");
+  uploading=true; render();
+  try{
+    const selected=Array.from(fileList).slice(0,remaining); const compressed=[];
+    for(const f of selected) compressed.push(await compressImage(f));
+    submissions[key]={...current, attendance:groupAttendance(activeGroup), notes, images:current.images.concat(compressed)};
+    persistLocal(); flash(compressed.length===1?"Photo added":compressed.length+" photos added");
+  }catch(e){flash(e.message||"Could not add photo")}
+  finally{uploading=false; render()}
+}
+function removeImage(id){const key=submissionKey(activeGroup,currentDate); const current=getSub(activeGroup,currentDate); if(!current)return; current.images=current.images.filter(i=>i.id!==id); submissions[key]=current; persistLocal(); render()}
+async function submitWeek(){
+  if(!activeGroup) return;
+  const key=submissionKey(activeGroup,currentDate);
+  const current=getSub(activeGroup,currentDate)||{images:[]};
+  submissions[key]={group:activeGroup,date:currentDate,attendance:groupAttendance(activeGroup),images:current.images||[],notes:notes.trim(),submittedAt:new Date().toISOString()};
+  persistLocal();
+  try{
+    syncId=await saveCloud(syncId,{version:2,roster,attendance:state,submissions,updatedAt:new Date().toISOString()});
+    setSyncInUrl(syncId); persistLocal(); flash("Weekly submission saved for all devices");
+  }catch{flash("Saved on this phone — Sync failed, tap Sync later")}
+}
+
+function modeBar(){
+  if(editing) return `<div class="mode-banner">Edit mode — change leaders/members/phones, then tap <b>Save</b> so every device sees the update.</div>`;
+  return `<div class="mode-banner view">View mode — leaders can submit. Tap <b>Edit</b> to change the roster.</div>`;
+}
+function editActions(){
+  if(editing) return `
+    <button type="button" id="saveBtn" ${saving?"disabled":""}>${saving?"Saving…":"Save"}</button>
+    <button type="button" class="secondary" id="cancelEditBtn">Cancel</button>`;
+  return `
+    <button type="button" id="editBtn">Edit</button>
+    <button type="button" class="secondary" id="syncBtn" ${saving?"disabled":""}>${saving?"Syncing…":"Sync"}</button>
+    <button type="button" class="secondary" id="dashBtn">Analytics</button>
+    <button type="button" class="secondary" id="viewAll">All groups</button>`;
+}
+function bindEditActions(){
+  const editBtn=document.getElementById("editBtn"); if(editBtn) editBtn.onclick=enterEdit;
+  const saveBtn=document.getElementById("saveBtn"); if(saveBtn) saveBtn.onclick=saveEdit;
+  const cancelBtn=document.getElementById("cancelEditBtn"); if(cancelBtn) cancelBtn.onclick=cancelEdit;
+  const syncBtn=document.getElementById("syncBtn"); if(syncBtn) syncBtn.onclick=syncNow;
+  const dashBtn=document.getElementById("dashBtn"); if(dashBtn) dashBtn.onclick=()=>{view="dashboard"; render()};
+  const viewAll=document.getElementById("viewAll"); if(viewAll) viewAll.onclick=()=>{view="overview"; render()};
+}
+
+
+function isStandaloneApp(){
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+}
+function installTipHtml(){
+  if(isStandaloneApp()) return "";
+  if(localStorage.getItem("attendance-install-dismissed-v1")==="1") return "";
+  const isIos=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  const steps=isIos
+    ? `<ol><li>Tap the <b>Share</b> button (square with arrow) at the bottom of Safari</li><li>Scroll and tap <b>Add to Home Screen</b></li><li>Tap <b>Add</b> — Attendance opens like an app</li></ol>`
+    : `<ol><li>Open this page in your phone browser</li><li>Use the browser menu → <b>Install app</b> or <b>Add to Home Screen</b></li><li>Open the Attendance icon from your home screen</li></ol>`;
+  return `<div class="install-tip" id="installTip"><h3>Install on your iPhone</h3>
+    <p>Add Attendance to your Home Screen so it opens full-screen like an app (same church link).</p>
+    ${steps}
+    <div class="tip-actions"><button type="button" id="dismissInstall" class="secondary">Got it</button></div></div>`;
+}
+function bindInstallTip(){
+  const btn=document.getElementById("dismissInstall");
+  if(!btn) return;
+  btn.onclick=()=>{localStorage.setItem("attendance-install-dismissed-v1","1"); const tip=document.getElementById("installTip"); if(tip) tip.remove();};
+}
+
+function renderHome(){
+  const r=activeRoster(); const total=countRoster(r);
+  const cards=Object.entries(r).map(([group,rec])=>{
+    const sub=getSub(group,currentDate); const submitted=!!(sub&&sub.submittedAt); const photos=(sub&&sub.images&&sub.images.length)||0;
+    const phone=rec.phone?`<span class="phone-line">☎ ${esc(rec.phone)}</span>`:"";
+    return `<div class="leader-card${submitted?" submitted":""}">
+      <button type="button" class="leader-card-main" data-open="${esc(group)}">
+        <span class="leader-name">${esc(leaderLabel(group))}</span>
+        ${phone}
+        <span class="leader-meta">${(rec.members||[]).length} active${(rec.icu&&rec.icu.length)?` · ${rec.icu.length} ICU`:""}${photos?` · ${photos} photo${photos===1?"":"s"}`:""}</span>
+        <span class="leader-status${submitted?" on":""}">${submitted?"Submitted":"Tap to submit"}</span>
+      </button>
+      ${editing?`<button type="button" class="leader-remove" data-remove-leader="${esc(group)}">Remove leader</button>`:""}
+    </div>`;
+  }).join("");
+  app.innerHTML=`
+    <header><div class="header-inner"><h1>Attendance <span>Ledger</span></h1>
+      <div class="date-row"><label for="weekDate">Week of</label><input id="weekDate" type="date" value="${currentDate}"></div></div></header>
+    <div class="total-banner"><div><span class="total-label">Total members</span><strong class="total-number">${total}</strong></div>
+      <div class="total-meta">${Object.keys(r).length} leaders · week of ${currentDate}</div></div>
+    <div class="hero-copy"><h2>Who is submitting this week?</h2>
+      <p>Pick your name, mark attendance, add photos, and submit. Use Edit + Save to update leaders for every device.</p></div>
+    ${installTipHtml()}
+    ${modeBar()}
+    <div class="actions">${editActions()}</div>
+    <div class="status-msg">${esc(statusMsg||(lastSyncedAt?("Last synced "+new Date(lastSyncedAt).toLocaleString()):"Shared across devices when you Save or Sync."))}</div>
+    <div class="share-box">Share this church link with all leaders:<br><code>${esc(shareUrl())}</code></div>
+    <main class="leader-grid">${cards}</main>
+    ${editing?`<section class="manage-panel"><h3>Add a leader</h3>
+      <div class="field-row">
+        <input id="newLeader" type="text" placeholder="Leader name" value="${esc(newLeaderName)}">
+        <input id="newLeaderPhone" type="tel" placeholder="Phone number" value="${esc(newLeaderPhone)}">
+        <button type="button" id="addLeaderBtn">Add leader</button>
+      </div></section>`:""}`;
+  document.getElementById("weekDate").onchange=e=>{currentDate=e.target.value; render()};
+  bindInstallTip();
+  bindEditActions();
+  app.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openLeader(b.getAttribute("data-open")));
+  app.querySelectorAll("[data-remove-leader]").forEach(b=>b.onclick=()=>removeLeader(b.getAttribute("data-remove-leader")));
+  if(editing){
+    document.getElementById("newLeader").oninput=e=>{newLeaderName=e.target.value};
+    document.getElementById("newLeaderPhone").oninput=e=>{newLeaderPhone=e.target.value};
+    document.getElementById("addLeaderBtn").onclick=addLeader;
+  }
+}
+
+function renderLeader(){
+  const r=activeRoster(); const people=(r[activeGroup]?.members)||[]; const counts=countGroup(activeGroup);
+  const sub=getSub(activeGroup,currentDate); const images=(sub&&sub.images)||[]; const submittedAt=sub&&sub.submittedAt; const day=dayState();
+  const leaderPhone=r[activeGroup]?.phone||"";
+  const otherGroups=Object.keys(r).filter(g=>g!==activeGroup);
+  const rows=people.map(m=>{
+    const current=day[personKey(activeGroup,m.name)];
+    const moveOptions=otherGroups.map(g=>`<option value="${esc(g)}">${esc(leaderLabel(g))}</option>`).join("");
+    return `<div class="person-row">
+      <div class="person-main">
+        <span class="person-name">${esc(m.name)}</span>
+        ${editing?`<input class="phone-input" data-member-phone="${esc(m.name)}" type="tel" placeholder="Phone" value="${esc(m.phone||"")}">`:
+          (m.phone?`<span class="person-phone">☎ ${esc(m.phone)}</span>`:"")}
+      </div>
+      <div class="person-actions">
+        <span class="toggle-group">
+          <button type="button" class="toggle-btn present${current==="present"?" active":""}" data-name="${esc(m.name)}" data-val="present">Present</button>
+          <button type="button" class="toggle-btn absent${current==="absent"?" active":""}" data-name="${esc(m.name)}" data-val="absent">Absent</button>
+        </span>
+        <button type="button" class="icu-btn" data-to-icu="${esc(m.name)}">To ICU</button>
+        <label class="move-control">
+          <select data-move-select="${esc(m.name)}"><option value="">Move to leader…</option>${moveOptions}</select>
+          <button type="button" class="move-btn" data-move-member="${esc(m.name)}">Move</button>
+        </label>
+        ${editing?`<button type="button" class="remove-btn" data-remove-member="${esc(m.name)}">Remove</button>`:""}
+      </div></div>`;
+  }).join("");
+  const photos=images.map(img=>`<figure class="photo-tile"><img src="${img.dataUrl}" alt="${esc(img.name)}"><button type="button" class="photo-remove" data-remove="${esc(img.id)}">Remove</button></figure>`).join("");
+  app.innerHTML=`
+    <header><div class="header-inner"><div><button type="button" class="back-link" id="backHome">← All leaders</button>
+      <h1>${esc(leaderLabel(activeGroup))} <span>Group</span></h1></div>
+      <div class="date-row"><label for="leaderDate">Week of</label><input id="leaderDate" type="date" value="${currentDate}"></div></div></header>
+    ${modeBar()}
+    <div class="summary-bar">
+      <div>Members: <b>${counts.total}</b></div><div>Present: <b>${counts.present}</b></div>
+      <div>Absent: <b>${counts.absent}</b></div><div>ICU: <b>${((r[activeGroup]&&r[activeGroup].icu)||[]).length}</b></div><div>Photos: <b>${images.length}</b></div>
+    </div>
+    <div class="actions">
+      <button type="button" id="submitBtn">${submittedAt?"Update submission":"Submit this week"}</button>
+      <button type="button" class="secondary" id="markAll">Mark all present</button>
+      ${editActions()}
+      ${editing?`<button type="button" class="secondary danger" id="removeLeaderBtn">Remove leader</button>`:""}
+    </div>
+    <div class="status-msg">${esc(statusMsg||(submittedAt?("Last submitted "+new Date(submittedAt).toLocaleString()):"Mark attendance, add photos, then submit."))}</div>
+    <main>
+      <section class="group"><div class="group-head static"><h2>Leader phone</h2></div>
+        <div class="group-body" style="padding:12px">
+          ${editing?`<input id="leaderPhone" class="phone-input" type="tel" placeholder="Leader phone number" value="${esc(leaderPhone)}">`:
+            `<span class="phone-line">${leaderPhone?("☎ "+esc(leaderPhone)):"No phone saved"}</span>`}
+        </div></section>
+      <section class="group"><div class="group-head static"><h2>Members & attendance</h2><span class="group-count">${people.length}</span></div>
+        <div class="group-body"><p class="photo-hint">Use <b>Move to leader…</b> to switch groups. Tap <b>To ICU</b> for long absences — the ICU list is in the next section below.</p>${rows}
+          ${editing?`<div class="add-row">
+            <input id="newName" type="text" placeholder="Member name">
+            <input id="newPhone" type="tel" placeholder="Phone">
+            <button type="button" id="addName">Add member</button>
+          </div>`:""}
+        </div></section>
+      <section class="group icu-section" id="icu-section"><div class="group-head static"><h2>ICU — long absences</h2><span class="group-count">${((r[activeGroup]&&r[activeGroup].icu)||[]).length}</span></div>
+        <div class="group-body"><p class="photo-hint">This leader’s ICU list. Tap <b>To ICU</b> on an active member above to add them here. Restore brings them back to attendance.</p>
+          ${(((r[activeGroup]&&r[activeGroup].icu)||[]).length)?((r[activeGroup].icu||[]).map(m=>{
+            const moveOptionsIcu=otherGroups.map(g=>`<option value="${esc(g)}">${esc(leaderLabel(g))}</option>`).join("");
+            return `<div class="person-row"><div class="person-main"><span class="person-name">${esc(m.name)}</span>${m.phone?`<span class="person-phone">☎ ${esc(m.phone)}</span>`:""}</div><div class="person-actions"><button type="button" class="icu-btn restore" data-restore-icu="${esc(m.name)}">Restore</button><label class="move-control"><select data-move-select="${esc(m.name)}"><option value="">Move to leader…</option>${moveOptionsIcu}</select><button type="button" class="move-btn" data-move-member="${esc(m.name)}">Move</button></label></div></div>`;
+          }).join("")):`<p class="photo-empty">No one in ICU right now.</p>`}
+        </div></section>
+      <section class="group"><div class="group-head static"><h2>Weekly photos</h2><span class="group-count">${images.length}/${MAX_IMAGES}</span></div>
+        <div class="group-body photo-body">
+          <p class="photo-hint">Add pictures from this week’s gathering (up to ${MAX_IMAGES}).</p>
+          <div class="photo-actions">
+            <button type="button" id="takePhoto" ${uploading||images.length>=MAX_IMAGES?"disabled":""}>Take photo</button>
+            <button type="button" id="uploadPhotos" ${uploading||images.length>=MAX_IMAGES?"disabled":""}>Upload images</button>
+            <input id="cameraInput" type="file" accept="image/*" capture="environment" hidden>
+            <input id="fileInput" type="file" accept="image/*" multiple hidden>
+          </div>
+          ${images.length?`<div class="photo-grid">${photos}</div>`:`<p class="photo-empty">No photos yet for this week.</p>`}
+        </div></section>
+      <section class="group"><div class="group-head static"><h2>Notes</h2></div>
+        <div class="group-body"><textarea id="notesInput" class="notes-input" rows="3" placeholder="Optional notes…">${esc(notes)}</textarea></div></section>
+      <div class="actions"><button type="button" id="submitBtn2">${submittedAt?"Update submission":"Submit this week"}</button></div>
+    </main>`;
+  document.getElementById("backHome").onclick=goHome;
+  document.getElementById("leaderDate").onchange=e=>{currentDate=e.target.value; notes=(getSub(activeGroup,currentDate)||{}).notes||""; render()};
+  document.getElementById("submitBtn").onclick=submitWeek;
+  document.getElementById("submitBtn2").onclick=submitWeek;
+  document.getElementById("markAll").onclick=()=>markGroupPresent(activeGroup);
+  bindEditActions();
+  const removeLeaderBtn=document.getElementById("removeLeaderBtn"); if(removeLeaderBtn) removeLeaderBtn.onclick=()=>removeLeader(activeGroup);
+  document.getElementById("notesInput").oninput=e=>{notes=e.target.value};
+  document.getElementById("takePhoto").onclick=()=>document.getElementById("cameraInput").click();
+  document.getElementById("uploadPhotos").onclick=()=>document.getElementById("fileInput").click();
+  document.getElementById("cameraInput").onchange=e=>addImages(e.target.files);
+  document.getElementById("fileInput").onchange=e=>addImages(e.target.files);
+  app.querySelectorAll(".toggle-btn").forEach(b=>b.onclick=()=>setStatus(activeGroup,b.dataset.name,b.dataset.val));
+  app.querySelectorAll("[data-remove]").forEach(b=>b.onclick=()=>removeImage(b.getAttribute("data-remove")));
+  app.querySelectorAll("[data-remove-member]").forEach(b=>b.onclick=()=>removePerson(activeGroup,b.getAttribute("data-remove-member")));
+  app.querySelectorAll("[data-to-icu]").forEach(b=>b.onclick=()=>sendToIcu(activeGroup,b.getAttribute("data-to-icu")));
+  app.querySelectorAll("[data-restore-icu]").forEach(b=>b.onclick=()=>restoreFromIcu(activeGroup,b.getAttribute("data-restore-icu")));
+  app.querySelectorAll("[data-move-member]").forEach(b=>{
+    b.onclick=()=>{
+      const name=b.getAttribute("data-move-member");
+      const select=b.parentElement && b.parentElement.querySelector("select");
+      movePerson(activeGroup, name, select ? select.value : "");
+    };
+  });
+  if(editing){
+    const lp=document.getElementById("leaderPhone");
+    if(lp) lp.oninput=e=>setLeaderPhone(activeGroup,e.target.value);
+    app.querySelectorAll("[data-member-phone]").forEach(inp=>{
+      inp.oninput=e=>setMemberPhone(activeGroup, inp.getAttribute("data-member-phone"), e.target.value);
+    });
+    document.getElementById("addName").onclick=()=>addPerson(activeGroup, document.getElementById("newName").value, document.getElementById("newPhone").value);
+  }
+}
+
+
+function shortDate(date){const p=String(date).split("-"); return p.length===3?`${Number(p[1])}/${Number(p[2])}`:date}
+function legendHtml(items){return `<ul class="chart-legend">${items.map(i=>`<li><span class="swatch" style="background:${i.color}"></span>${i.label}</li>`).join("")}</ul>`}
+function statusDonutHtml(week){
+  const segs=[{v:week.present,c:"var(--present)"},{v:week.absent,c:"var(--absent)"},{v:week.unmarked,c:"#cfc6b0"}];
+  const total=Math.max(week.total,1), r=54, circ=2*Math.PI*r; let off=0;
+  const circles=segs.map(s=>{const len=(s.v/total)*circ; const el=`<circle cx="70" cy="70" r="${r}" fill="none" stroke="${s.c}" stroke-width="16" stroke-dasharray="${len} ${circ-len}" stroke-dashoffset="${-off}" transform="rotate(-90 70 70)"/>`; off+=len; return el;}).join("");
+  return `<div class="chart-panel"><div class="chart-panel-head"><h3>This week’s mix</h3><p>Present, absent, and not yet marked</p></div>
+    <div class="donut-wrap"><svg viewBox="0 0 140 140" class="donut-chart"><circle cx="70" cy="70" r="${r}" fill="none" stroke="#efe9d8" stroke-width="16"/>${circles}</svg>
+    <div class="donut-center"><strong>${week.rate}%</strong><span>rate</span></div></div>
+    ${legendHtml([{color:"var(--present)",label:`Present · ${week.present}`},{color:"var(--absent)",label:`Absent · ${week.absent}`},{color:"#cfc6b0",label:`Unmarked · ${week.unmarked}`}])}</div>`;
+}
+function submissionGaugeHtml(week){
+  const pct=week.totalGroups?Math.round(week.submittedGroups/week.totalGroups*100):0;
+  const r=48, circ=2*Math.PI*r, filled=(pct/100)*circ;
+  return `<div class="chart-panel"><div class="chart-panel-head"><h3>Submissions</h3><p>Leaders finished for this week</p></div>
+    <div class="donut-wrap compact"><svg viewBox="0 0 120 120" class="donut-chart"><circle cx="60" cy="60" r="${r}" fill="none" stroke="#efe9d8" stroke-width="12"/>
+    <circle cx="60" cy="60" r="${r}" fill="none" stroke="var(--gold)" stroke-width="12" stroke-dasharray="${filled} ${circ-filled}" stroke-linecap="round" transform="rotate(-90 60 60)"/></svg>
+    <div class="donut-center"><strong>${week.submittedGroups}/${week.totalGroups}</strong><span>${pct}%</span></div></div></div>`;
+}
+function trendChartHtml(weeks){
+  const width=320,height=160,padX=28,padY=18,innerW=width-padX*2,innerH=height-padY*2;
+  if(!weeks.length) return `<div class="chart-panel"><div class="chart-panel-head"><h3>Attendance trend</h3><p>Weekly rate across recent weeks</p></div><p class="chart-empty">No week history yet.</p></div>`;
+  const pts=weeks.map((week,i)=>{const x=weeks.length<=1?padX+innerW/2:padX+(i/(weeks.length-1))*innerW; const y=padY+innerH-(week.rate/100)*innerH; return {x,y,week};});
+  const line=pts.map(p=>`${p.x},${p.y}`).join(" ");
+  const area=`${padX},${padY+innerH} ${line} ${padX+innerW},${padY+innerH}`;
+  const grid=[0,25,50,75,100].map(t=>{const y=padY+innerH-(t/100)*innerH; return `<line x1="${padX}" y1="${y}" x2="${padX+innerW}" y2="${y}" class="chart-gridline"/><text x="4" y="${y+3}" class="chart-axis">${t}</text>`;}).join("");
+  const dots=pts.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="4.5" class="trend-dot"/><text x="${p.x}" y="${height-2}" text-anchor="middle" class="chart-axis">${shortDate(p.week.date)}</text>`).join("");
+  return `<div class="chart-panel"><div class="chart-panel-head"><h3>Attendance trend</h3><p>Weekly rate across recent weeks</p></div>
+    <svg viewBox="0 0 ${width} ${height}" class="trend-chart">${grid}<polygon points="${area}" class="trend-area"/><polyline points="${line}" class="trend-line"/>${dots}</svg>
+    ${legendHtml([{color:"var(--forest)",label:"Attendance rate %"}])}</div>`;
+}
+function leaderCompareHtml(groups){
+  const max=Math.max(1,...groups.map(r=>Math.max(r.present+r.absent+r.unmarked,1)));
+  const cols=groups.map(row=>{
+    const ph=(row.present/max)*100, ah=(row.absent/max)*100, uh=(row.unmarked/max)*100;
+    return `<button type="button" class="compare-col" data-open="${esc(row.group)}"><div class="compare-bars"><span class="stack present" style="height:${ph}%"></span><span class="stack absent" style="height:${ah}%"></span><span class="stack unmarked" style="height:${uh}%"></span></div><strong>${row.rate}%</strong><em>${esc(row.label)}</em></button>`;
+  }).join("");
+  return `<div class="chart-panel wide"><div class="chart-panel-head"><h3>Leaders compared</h3><p>Present vs absent vs unmarked this week</p></div><div class="compare-chart">${cols}</div>
+    ${legendHtml([{color:"var(--present)",label:"Present"},{color:"var(--absent)",label:"Absent"},{color:"#cfc6b0",label:"Unmarked"}])}</div>`;
+}
+function icuChartHtml(groups){
+  const total=groups.reduce((s,r)=>s+r.icu,0); const max=Math.max(1,...groups.map(r=>r.icu));
+  if(!total) return `<div class="chart-panel wide"><div class="chart-panel-head"><h3>ICU by leader</h3><p>No one in ICU right now</p></div><p class="chart-empty">ICU is empty across all groups.</p></div>`;
+  const rows=groups.filter(r=>r.icu>0).map(r=>`<div class="icu-bar-row"><span class="icu-bar-label">${esc(r.label)}</span><div class="icu-bar-track"><span class="icu-bar-fill" style="width:${(r.icu/max)*100}%"></span></div><strong>${r.icu}</strong></div>`).join("");
+  return `<div class="chart-panel wide"><div class="chart-panel-head"><h3>ICU by leader</h3><p>${total} member${total===1?"":"s"} set aside for follow-up</p></div><div class="icu-bars">${rows}</div></div>`;
+}
+function chartsHtml(a){
+  return `<div class="chart-grid">${statusDonutHtml(a.thisWeek)}${submissionGaugeHtml(a.thisWeek)}${trendChartHtml(a.trendWeeks)}${leaderCompareHtml(a.byGroup)}${icuChartHtml(a.byGroup)}</div>`;
+}
+function overviewSparkHtml(groups){
+  const items=groups.map(r=>`<button type="button" class="spark-item" data-open="${esc(r.group)}"><div class="spark-track"><span style="height:${Math.max(r.rate,4)}%"></span></div><em>${esc(r.label)}</em><strong>${r.rate}%</strong></button>`).join("");
+  return `<div class="overview-spark wrap"><div class="chart-panel-head"><h3>Week at a glance</h3><p>Tap a leader bar to open their group</p></div><div class="spark-row">${items}</div></div>`;
+}
+
+function renderDashboard(){
+  const a=buildAnalytics(), w=a.thisWeek;
+  const byGroup=a.byGroup.map(row=>`<div class="analytics-row"><div class="analytics-row-main"><button type="button" class="linkish" data-open="${esc(row.group)}">${esc(row.label)}</button>
+    <span class="muted">${row.members} active${row.icu?` · ${row.icu} ICU`:""} · ${row.present} present · ${row.absent} absent${row.submitted?" · submitted":""}</span></div>
+    <div class="rate-bar"><span style="width:${row.rate}%"></span><em>${row.rate}%</em></div></div>`).join("");
+  const weeks=a.recentWeeks.map(week=>`<div class="analytics-row"><div class="analytics-row-main"><strong>${week.date}</strong>
+    <span class="muted">${week.present} present · ${week.absent} absent · ${week.submittedGroups}/${week.totalGroups} submitted</span></div>
+    <div class="rate-bar"><span style="width:${week.rate}%"></span><em>${week.rate}%</em></div></div>`).join("");
+  app.innerHTML=`
+    <header><div class="header-inner"><div><button type="button" class="back-link" id="backHome">← Leaders</button>
+      <h1>Attendance <span>Dashboard</span></h1></div>
+      <div class="date-row"><label for="dashDate">Week of</label><input id="dashDate" type="date" value="${currentDate}"></div></div></header>
+    <div class="stat-strip">
+      <div class="stat-card highlight"><span class="stat-label">Total members</span><strong>${a.totalMembers}</strong></div>
+      <div class="stat-card"><span class="stat-label">Active</span><strong>${a.totalActive}</strong></div>
+      <div class="stat-card"><span class="stat-label">ICU</span><strong>${a.totalIcu}</strong></div>
+      <div class="stat-card"><span class="stat-label">Leaders</span><strong>${a.totalLeaders}</strong></div>
+      <div class="stat-card"><span class="stat-label">Present this week</span><strong>${w.present}</strong></div>
+      <div class="stat-card"><span class="stat-label">Attendance rate</span><strong>${w.rate}%</strong></div>
+      <div class="stat-card"><span class="stat-label">Avg rate</span><strong>${a.averageRate}%</strong></div>
+      <div class="stat-card"><span class="stat-label">Submissions</span><strong>${w.submittedGroups}/${w.totalGroups}</strong></div>
+    </div>
+    <main>
+      ${chartsHtml(a)}
+      <section class="group"><div class="group-head static"><h2>By leader this week</h2></div><div class="group-body">${byGroup}</div></section>
+      <section class="group"><div class="group-head static"><h2>Recent weeks</h2></div><div class="group-body">${weeks}</div></section>
+    </main>`;
+  document.getElementById("backHome").onclick=goHome;
+  document.getElementById("dashDate").onchange=e=>{currentDate=e.target.value; render()};
+  app.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openLeader(b.getAttribute("data-open")));
+}
+function renderOverview(){
+  const r=activeRoster(); const total=countRoster(r); const a=buildAnalytics();
+  const sections=Object.entries(r).map(([group,rec])=>{
+    const counts=countGroup(group); const sub=getSub(group,currentDate);
+    const photos=((sub&&sub.images)||[]).map(img=>`<figure class="photo-tile"><img src="${img.dataUrl}" alt="${esc(img.name)}"></figure>`).join("");
+    return `<section class="group"><button type="button" class="group-head" data-open="${esc(group)}">
+      <h2>${esc(group)}${sub&&sub.submittedAt?' <span class="pill">Submitted</span>':""}</h2>
+      <span class="group-count">${counts.present}/${counts.total}</span></button>
+      ${photos||(sub&&sub.notes)?`<div class="group-body">${photos?`<div class="photo-grid">${photos}</div>`:""}${sub&&sub.notes?`<p class="notes-preview">${esc(sub.notes)}</p>`:""}</div>`:""}
+    </section>`;
+  }).join("");
+  app.innerHTML=`
+    <header><div class="header-inner"><div><button type="button" class="back-link" id="backHome">← Leaders</button>
+      <h1>All <span>Groups</span></h1></div>
+      <div class="date-row"><label for="overviewDate">Week of</label><input id="overviewDate" type="date" value="${currentDate}"></div></div></header>
+    <div class="total-banner"><div><span class="total-label">Total members</span><strong class="total-number">${total}</strong></div>
+      <div class="total-meta">${a.totalActive} active · ${a.totalIcu} ICU · week of ${currentDate}</div></div>
+    ${overviewSparkHtml(a.byGroup)}
+    <main>${sections}</main>`;
+  document.getElementById("backHome").onclick=goHome;
+  document.getElementById("overviewDate").onchange=e=>{currentDate=e.target.value; render()};
+  app.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openLeader(b.getAttribute("data-open")));
+}
+function render(){ if(view==="leader"&&activeGroup) renderLeader(); else if(view==="overview") renderOverview(); else if(view==="dashboard") renderDashboard(); else renderHome(); }
+
+async function boot(){
+  const params=new URLSearchParams(location.search);
+  syncId=params.get("sync") || localStorage.getItem("church-attendance-sync-id-v1") || DEFAULT_SYNC_ID;
+  setSyncInUrl(syncId);
+  app.innerHTML=`<header><div class="header-inner"><h1>Attendance <span>Ledger</span></h1></div></header><div class="status-msg">Loading shared church data…</div>`;
+  let cloud=null;
+  try{ cloud=await loadCloud(syncId); }catch{}
+  if(cloud&&cloud.roster){
+    roster=normalizeRoster(cloud.roster);
+    state=cloud.attendance&&typeof cloud.attendance==="object"?cloud.attendance:{};
+    submissions=cloud.submissions&&typeof cloud.submissions==="object"?cloud.submissions:{};
+    lastSyncedAt=cloud.updatedAt||"";
+  }else{
+    // seed cloud with defaults / local
+    try{
+      const localRoster=localStorage.getItem("church-attendance-roster-v2");
+      if(localRoster) roster=normalizeRoster(JSON.parse(localRoster));
+      const localState=localStorage.getItem("church-attendance-state-v2");
+      if(localState) state=JSON.parse(localState);
+      const localSubs=localStorage.getItem("church-attendance-submissions-v2");
+      if(localSubs) submissions=JSON.parse(localSubs);
+    }catch{}
+    try{
+      const payload={version:2,roster,attendance:state,submissions,updatedAt:new Date().toISOString()};
+      syncId=await saveCloud(syncId, payload);
+      lastSyncedAt=payload.updatedAt;
+      setSyncInUrl(syncId);
+    }catch{}
+  }
+  persistLocal();
+  const leader=params.get("leader")||params.get("g");
+  if(leader){const g=findGroupBySlug(leader); if(g){activeGroup=g; view="leader"; notes=(getSub(g,currentDate)||{}).notes||""}}
+  render();
+  if("serviceWorker" in navigator){
+    navigator.serviceWorker.register("./sw.js").catch(()=>{});
+  }
+}
+boot();
+</script>
+</body>
+</html>

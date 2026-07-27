@@ -1,6 +1,37 @@
+# Deploy guides
+
+## Attendance Ledger — live URL (LOCKED)
+
+**Do not replace this URL.** See [ATTENDANCE_URL.md](./ATTENDANCE_URL.md).
+
+**Church link:** https://attendance-ledger.shipstatic.com/?sync=019fa12a-e208-7876-b8f3-4f51e32a3093
+
+Publish updates (requires `SHIP_API_KEY` in the environment — never commit the key):
+
+```bash
+npx @shipstatic/ship ./docs --json
+npx @shipstatic/ship domains set attendance-ledger.shipstatic.com <new-deployment>
+```
+
+Future code updates must keep this **platform domain** as the share link. Preview deployment IDs change; the domain is repointed.
+
+### Permanent option: GitHub Pages
+
+A ready-to-serve copy is on the **`gh-pages`** branch.
+
+1. Open [Settings → Pages](https://github.com/augustusarthur/scripture-projection-app/settings/pages)
+2. **Build and deployment → Source** → **Deploy from a branch**
+3. Branch: **`gh-pages`**, folder: **`/`** → **Save**
+
+Then use: **https://augustusarthur.github.io/scripture-projection-app/**
+
+Works on your phone. Attendance saves in the browser — no database or env vars.
+
+---
+
 # Shepherd Connect — one-click Vercel deploy
 
-Use this if you want the fastest path to a live URL on your phone.
+Use this if you want the fastest path to a live URL on your phone for Shepherd Connect.
 
 ## Deploy in about 5 minutes
 

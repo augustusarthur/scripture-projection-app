@@ -1,3 +1,24 @@
+# First Love Tools
+
+Church tools for First Love: **Attendance Ledger** for small-group check-in, Scripture projector, and **Shepherd Connect** for pastor-only singles coordination across branches.
+
+## Attendance Ledger
+
+Track Sunday / small-group attendance by date:
+
+- Mark each person **Present** or **Absent** by group
+- Switch dates and keep history on the device (localStorage)
+- Add or remove people from the roster
+- Export the day as CSV
+
+Open the app at [`/attendance`](./src/app/attendance) locally, or the live site:
+
+**https://attendance-ledger.shipstatic.com/?sync=019fa12a-e208-7876-b8f3-4f51e32a3093**
+
+(Claim it to keep permanently — see [DEPLOY.md](./DEPLOY.md).)
+
+---
+
 # Shepherd Connect
 
 Pastor-only singles coordination across First Love Church branches. Shepherd Connect lets pastors create and manage single member profiles within their congregation, then securely share profiles with trusted pastors at other branches for intentional, faith-centered introductions.
