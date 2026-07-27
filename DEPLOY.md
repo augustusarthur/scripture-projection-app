@@ -6,11 +6,14 @@
 
 **Church link:** https://attendance-ledger.shipstatic.com/?sync=019fa12a-e208-7876-b8f3-4f51e32a3093
 
-Claim once to keep it permanent:
+Publish updates (requires `SHIP_API_KEY` in the environment — never commit the key):
 
-https://my.shipstatic.com/claim/4d9b490619efe1750c501e612974ffd1c719454edbab885c718c39a12ffda91b
+```bash
+npx @shipstatic/ship ./docs --json
+npx @shipstatic/ship domains set attendance-ledger.shipstatic.com <new-deployment>
+```
 
-Future code updates must **not** create a new ShipStatic link. Update `docs/` in git; republish to this same claimed deployment only (ShipStatic API key).
+Future code updates must keep this **platform domain** as the share link. Preview deployment IDs change; the domain is repointed.
 
 ### Permanent option: GitHub Pages
 
