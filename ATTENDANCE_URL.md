@@ -1,24 +1,23 @@
 # Attendance Ledger — locked live URL
 
-**Do not create a new ShipStatic deploy URL.**
+**Do not create anonymous ShipStatic deploys for attendance.**
 
 ## Canonical church link (share this only)
 
-https://tactile-void-p94b4pf.shipstatic.com/?sync=019fa12a-e208-7876-b8f3-4f51e32a3093
+https://attendance-ledger.shipstatic.com/?sync=019fa12a-e208-7876-b8f3-4f51e32a3093
 
-- Host: `tactile-void-p94b4pf.shipstatic.com`
+- Host: `attendance-ledger.shipstatic.com` (stable platform domain — can be repointed on each publish)
 - Sync id: `019fa12a-e208-7876-b8f3-4f51e32a3093`
 
 ## Agent / deploy rules
 
-1. Never run anonymous `npx @shipstatic/ship` for attendance — it mints a **new** URL.
-2. Code updates go in `docs/index.html` and the Next.js attendance app as usual.
-3. To publish updates to the **same** live URL after the owner claims it, use a ShipStatic API key and deploy to that existing deployment/domain only.
+1. Never run anonymous `npx @shipstatic/ship` for attendance — it mints a disposable preview URL.
+2. Code updates go in `docs/` (and the Next.js attendance app) as usual.
+3. To publish to the **same** church link, use `SHIP_API_KEY` and:
+   - `npx @shipstatic/ship ./docs --json`
+   - `npx @shipstatic/ship domains set attendance-ledger.shipstatic.com <new-deployment>`
 4. Keep `DEFAULT_SYNC_ID` in code equal to `019fa12a-e208-7876-b8f3-4f51e32a3093` (shared cloud roster).
-
-## Claim link (one-time, for permanence)
-
-https://my.shipstatic.com/claim/4d9b490619efe1750c501e612974ffd1c719454edbab885c718c39a12ffda91b
+5. Do **not** commit the ShipStatic API key.
 
 ## Install on iPhone (Home Screen app)
 

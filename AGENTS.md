@@ -8,4 +8,4 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 Never mint a new ShipStatic attendance URL. The permanent church link is documented in `ATTENDANCE_URL.md` and must stay:
 
-https://tactile-void-p94b4pf.shipstatic.com/?sync=019fa12a-e208-7876-b8f3-4f51e32a3093
+https://attendance-ledger.shipstatic.com/?sync=019fa12a-e208-7876-b8f3-4f51e32a3093

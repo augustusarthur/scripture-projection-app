@@ -13,7 +13,7 @@ Track Sunday / small-group attendance by date:
 
 Open the app at [`/attendance`](./src/app/attendance) locally, or the live site:
 
-**https://tactile-void-p94b4pf.shipstatic.com/?sync=019fa12a-e208-7876-b8f3-4f51e32a3093**
+**https://attendance-ledger.shipstatic.com/?sync=019fa12a-e208-7876-b8f3-4f51e32a3093**
 
 (Claim it to keep permanently — see [DEPLOY.md](./DEPLOY.md).)
 
