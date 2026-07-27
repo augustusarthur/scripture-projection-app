@@ -76,14 +76,12 @@ export const DEFAULT_ROSTER: Roster = {
     "Pressley",
     "Terrence",
     "Israel",
-    "Gerald",
     "Uyi",
     "Aliye",
     "Chancela",
     "Chidi",
     "Diana",
     "Ephraim",
-    "Jeff",
     "Korey",
     "Mama Vivian",
     "Nancy",
@@ -103,7 +101,6 @@ export const DEFAULT_ROSTER: Roster = {
     "Mac Noble",
     "Mya",
     "Tarmadji",
-    "Theresa",
     "Treasure",
   ]),
   "Shalyne's Group": groupFromNames([
@@ -116,6 +113,14 @@ export const DEFAULT_ROSTER: Roster = {
     "Brian",
     "Douglas",
     "Maru",
+  ]),
+  "Felix's Group": groupFromNames([
+    "Gerald",
+    "Theresa",
+    "Jackson",
+    "Cisco",
+    "Nancy Twum",
+    "Jeff",
   ]),
   "Needs a Group": groupFromNames([
     "Lucky",
@@ -131,7 +136,7 @@ export const SUBMISSIONS_STORAGE_KEY = "church-attendance-submissions-v2";
 export const SYNC_ID_STORAGE_KEY = "church-attendance-sync-id-v1";
 
 /** Shared church cloud record — all devices with this link use the same data */
-export const DEFAULT_SYNC_ID = "019f9be4-bfa4-730d-b396-bdeafbd8cb4a";
+export const DEFAULT_SYNC_ID = "019fa12a-e208-7876-b8f3-4f51e32a3093";
 
 export const MAX_IMAGES_PER_SUBMISSION = 8;
 

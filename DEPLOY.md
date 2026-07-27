@@ -4,7 +4,7 @@
 
 **Do not replace this URL.** See [ATTENDANCE_URL.md](./ATTENDANCE_URL.md).
 
-**Church link:** https://tactile-void-p94b4pf.shipstatic.com/?sync=019f9be4-bfa4-730d-b396-bdeafbd8cb4a
+**Church link:** https://tactile-void-p94b4pf.shipstatic.com/?sync=019fa12a-e208-7876-b8f3-4f51e32a3093
 
 Claim once to keep it permanent:
 

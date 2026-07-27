@@ -1,9 +1,9 @@
 {
-  "id": "/attendance?sync=019f9be4-bfa4-730d-b396-bdeafbd8cb4a",
+  "id": "/attendance?sync=019fa12a-e208-7876-b8f3-4f51e32a3093",
   "name": "Attendance Ledger",
   "short_name": "Attendance",
   "description": "First Love Church small-group attendance for leaders",
-  "start_url": "/attendance?sync=019f9be4-bfa4-730d-b396-bdeafbd8cb4a",
+  "start_url": "/attendance?sync=019fa12a-e208-7876-b8f3-4f51e32a3093",
   "scope": "/attendance",
   "display": "standalone",
   "orientation": "portrait-primary",

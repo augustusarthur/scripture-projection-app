@@ -4,17 +4,17 @@
 
 ## Canonical church link (share this only)
 
-https://tactile-void-p94b4pf.shipstatic.com/?sync=019f9be4-bfa4-730d-b396-bdeafbd8cb4a
+https://tactile-void-p94b4pf.shipstatic.com/?sync=019fa12a-e208-7876-b8f3-4f51e32a3093
 
 - Host: `tactile-void-p94b4pf.shipstatic.com`
-- Sync id: `019f9be4-bfa4-730d-b396-bdeafbd8cb4a`
+- Sync id: `019fa12a-e208-7876-b8f3-4f51e32a3093`
 
 ## Agent / deploy rules
 
 1. Never run anonymous `npx @shipstatic/ship` for attendance — it mints a **new** URL.
 2. Code updates go in `docs/index.html` and the Next.js attendance app as usual.
 3. To publish updates to the **same** live URL after the owner claims it, use a ShipStatic API key and deploy to that existing deployment/domain only.
-4. Keep `DEFAULT_SYNC_ID` in code equal to `019f9be4-bfa4-730d-b396-bdeafbd8cb4a`.
+4. Keep `DEFAULT_SYNC_ID` in code equal to `019fa12a-e208-7876-b8f3-4f51e32a3093` (shared cloud roster).
 
 ## Claim link (one-time, for permanence)
 
